@@ -14,6 +14,7 @@
 		4A9473172D4F0DE70083E9BF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A94730B2D4F0DE70083E9BF /* LaunchScreen.storyboard */; };
 		4A9473192D4F0DE70083E9BF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A9473102D4F0DE70083E9BF /* Main.storyboard */; };
 		4A94731D2D4F24A80083E9BF /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94731C2D4F24A80083E9BF /* BoardView.swift */; };
+		4A9473212D501E4B0083E9BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473202D501E4B0083E9BF /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		4A94730F2D4F0DE70083E9BF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		4A9473112D4F0DE70083E9BF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		4A94731C2D4F24A80083E9BF /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
+		4A9473202D501E4B0083E9BF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +74,7 @@
 				4A9473102D4F0DE70083E9BF /* Main.storyboard */,
 				4A9473112D4F0DE70083E9BF /* ViewController.swift */,
 				4A94731C2D4F24A80083E9BF /* BoardView.swift */,
+				4A9473202D501E4B0083E9BF /* Extensions.swift */,
 				4A94730D2D4F0DE70083E9BF /* Supporting Files */,
 				4A94730E2D4F0DE70083E9BF /* Info.plist */,
 			);
@@ -152,6 +155,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A9473212D501E4B0083E9BF /* Extensions.swift in Sources */,
 				4A9473132D4F0DE70083E9BF /* AppDelegate.swift in Sources */,
 				4A94731D2D4F24A80083E9BF /* BoardView.swift in Sources */,
 				4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */,
