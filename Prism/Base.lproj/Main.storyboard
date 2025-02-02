@@ -16,13 +16,28 @@
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dL2-6E-oAS" customClass="BoardView" customModule="Prism" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="48" width="414" height="814"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                            </view>
+                        </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="dL2-6E-oAS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="PHl-u6-fmZ"/>
+                            <constraint firstItem="dL2-6E-oAS" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="bAM-Ph-kxh"/>
+                            <constraint firstItem="dL2-6E-oAS" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="keg-Za-GyH"/>
+                            <constraint firstItem="dL2-6E-oAS" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="nXW-co-TlK"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="boardView" destination="dL2-6E-oAS" id="TDU-Hi-G81"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="140" y="4"/>
+            <point key="canvasLocation" x="139.13043478260872" y="3.3482142857142856"/>
         </scene>
     </scenes>
     <resources>
