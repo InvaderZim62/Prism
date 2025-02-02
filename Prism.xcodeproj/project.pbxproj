@@ -6,30 +6,25 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4A9473132D4F0DE70083E9BF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473092D4F0DE70083E9BF /* AppDelegate.swift */; };
+		4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94730C2D4F0DE70083E9BF /* SceneDelegate.swift */; };
+		4A9473152D4F0DE70083E9BF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473112D4F0DE70083E9BF /* ViewController.swift */; };
+		4A9473162D4F0DE70083E9BF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A94730A2D4F0DE70083E9BF /* Assets.xcassets */; };
+		4A9473172D4F0DE70083E9BF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A94730B2D4F0DE70083E9BF /* LaunchScreen.storyboard */; };
+		4A9473192D4F0DE70083E9BF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A9473102D4F0DE70083E9BF /* Main.storyboard */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		4A9472F12D4F0DB50083E9BF /* Prism.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prism.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A9473092D4F0DE70083E9BF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4A94730A2D4F0DE70083E9BF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4A94730B2D4F0DE70083E9BF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		4A94730C2D4F0DE70083E9BF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		4A94730E2D4F0DE70083E9BF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4A94730F2D4F0DE70083E9BF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4A9473112D4F0DE70083E9BF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4A9473032D4F0DBE0083E9BF /* Exceptions for "Prism" folder in "Prism" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 4A9472F02D4F0DB50083E9BF /* Prism */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		4A9472F32D4F0DB50083E9BF /* Prism */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				4A9473032D4F0DBE0083E9BF /* Exceptions for "Prism" folder in "Prism" target */,
-			);
-			path = Prism;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		4A9472EE2D4F0DB50083E9BF /* Frameworks */ = {
@@ -45,7 +40,7 @@
 		4A9472E82D4F0DB50083E9BF = {
 			isa = PBXGroup;
 			children = (
-				4A9472F32D4F0DB50083E9BF /* Prism */,
+				4A9473122D4F0DE70083E9BF /* Prism */,
 				4A9472F22D4F0DB50083E9BF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,6 +51,28 @@
 				4A9472F12D4F0DB50083E9BF /* Prism.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4A94730D2D4F0DE70083E9BF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				4A9473092D4F0DE70083E9BF /* AppDelegate.swift */,
+				4A94730C2D4F0DE70083E9BF /* SceneDelegate.swift */,
+				4A94730B2D4F0DE70083E9BF /* LaunchScreen.storyboard */,
+				4A94730A2D4F0DE70083E9BF /* Assets.xcassets */,
+			);
+			path = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		4A9473122D4F0DE70083E9BF /* Prism */ = {
+			isa = PBXGroup;
+			children = (
+				4A9473102D4F0DE70083E9BF /* Main.storyboard */,
+				4A9473112D4F0DE70083E9BF /* ViewController.swift */,
+				4A94730D2D4F0DE70083E9BF /* Supporting Files */,
+				4A94730E2D4F0DE70083E9BF /* Info.plist */,
+			);
+			path = Prism;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -72,9 +89,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				4A9472F32D4F0DB50083E9BF /* Prism */,
 			);
 			name = Prism;
 			packageProductDependencies = (
@@ -122,6 +136,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A9473162D4F0DE70083E9BF /* Assets.xcassets in Resources */,
+				4A9473172D4F0DE70083E9BF /* LaunchScreen.storyboard in Resources */,
+				4A9473192D4F0DE70083E9BF /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,10 +149,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A9473132D4F0DE70083E9BF /* AppDelegate.swift in Sources */,
+				4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */,
+				4A9473152D4F0DE70083E9BF /* ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		4A9473102D4F0DE70083E9BF /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4A94730F2D4F0DE70083E9BF /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		4A9473052D4F0DBE0083E9BF /* Debug */ = {
@@ -153,6 +184,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -181,6 +213,7 @@
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
