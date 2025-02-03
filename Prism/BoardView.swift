@@ -26,6 +26,9 @@ class BoardView: UIView {
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         prismView.addGestureRecognizer(pan)
+        
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        prismView.addGestureRecognizer(rotation)
     }
     
     override func draw(_ rect: CGRect) {
@@ -51,6 +54,17 @@ class BoardView: UIView {
             let translation = recognizer.translation(in: self)
             pannedView.center += translation
             recognizer.setTranslation(.zero, in: self)
+            setNeedsDisplay()
+        }
+    }
+    
+    // to allow simultaneous rotate and pan gestures,
+    // see Color app, which uses simultaneous pinch and pan gestures
+    @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
+        if let rotatedView = recognizer.view {
+            let rotation = recognizer.rotation
+            rotatedView.transform = rotatedView.transform.rotated(by: rotation)
+            recognizer.rotation = 0  // reset, to use incremental rotations
             setNeedsDisplay()
         }
     }
