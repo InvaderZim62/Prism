@@ -7,43 +7,39 @@
 
 import UIKit
 
+struct Constant {
+    static let prismSideLength = 200.0
+}
+
 class BoardView: UIView {
 
-    let prism = UIBezierPath()
-    let light = UIBezierPath()
+    let prismView = PrismView()
     
-    var prismPeak = CGPoint(x: 200, y: 200)
-    var prismSideLength = 200.0
     var lightAngle = 0.rads  // radians (0 right, positive clockwise)
-    var lightSource = CGPoint(x: 50, y: 250)
-    
-//    var lightAngle = -45.0.rads  // radians (0 right, positive clockwise)
-//    var lightSource = CGPoint(x: 50, y: 400)
+    var lightSourcePoint = CGPoint(x: 50, y: 280)
 
-    override func draw(_ rect: CGRect) {
-        drawPrism()
-        drawLight()
+    required init?(coder: NSCoder) {  // called for views added through Interface Builder
+        super.init(coder: coder)
+        prismView.frame = CGRect(x: 100, y: 200, width: Constant.prismSideLength, height: Constant.prismSideLength * sin(60.rads))
+        prismView.backgroundColor = .clear
+        addSubview(prismView)
     }
     
-    private func drawPrism() {
-        prism.move(to: prismPeak)
-        prism.addLine(to: prismPeak + CGPoint(x: prismSideLength * cos(60.rads), y: prismSideLength * sin(60.rads)))
-        prism.addLine(to: prismPeak + CGPoint(x: -prismSideLength * cos(60.rads), y: prismSideLength * sin(60.rads)))
-        prism.close()
-        UIColor.white.setStroke()
-        prism.stroke()
+    override func draw(_ rect: CGRect) {
+        drawLight()
     }
     
     private func drawLight() {
         let step = 2.0
-        var point = lightSource
+        var point = lightSourcePoint
+        let light = UIBezierPath()
         light.move(to: point)
-        repeat {
-            print(".", terminator: "")
+        while !prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
             point += CGPoint(x: step * cos(lightAngle), y: step * sin(lightAngle))
             light.addLine(to: point)
-        } while !prism.contains(point) && frame.contains(point)
+        }
         UIColor.white.setStroke()
+        light.lineWidth = 2
         light.stroke()
     }
 }
