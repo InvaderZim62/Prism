@@ -15,8 +15,8 @@ class BoardView: UIView {
 
     let prismView = PrismView()
     
-    var lightAngle = 0.rads  // radians (0 right, positive clockwise)
-    var lightSourcePoint = CGPoint(x: 50, y: 280)
+    var lightAngle = 0.rads  // +/-.pi radians (0 right, positive clockwise)
+    var lightSourceStartingPoint = CGPoint(x: 50, y: 280)
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
@@ -37,7 +37,7 @@ class BoardView: UIView {
     
     private func drawLight() {
         let step = 2.0
-        var point = lightSourcePoint
+        var point = lightSourceStartingPoint
         let light = UIBezierPath()
         light.move(to: point)
         while !prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
@@ -47,7 +47,38 @@ class BoardView: UIView {
         UIColor.white.setStroke()
         light.lineWidth = 2
         light.stroke()
+        
+        if let normalAngle = surfaceNormalAngleAtPoint(point) {
+            let normal = UIBezierPath()
+            normal.move(to: point)
+            normal.addLine(to: point + CGPoint(x: 20 * cos(normalAngle), y: 20 * sin(normalAngle)))
+            UIColor.red.setStroke()
+            normal.stroke()
+        }
     }
+    
+    // direction of surface normal pointing toward the inside of the shape
+    // +/-.pi radians (0 right, positive clockwise)
+    private func surfaceNormalAngleAtPoint(_ point: CGPoint) -> Double? {
+        let radius = 3.0
+        let numPoints = 90  // every 4 degrees
+        let deltaAngle = 2 * .pi / Double(numPoints)
+        var isContainedArray = [Bool]()
+        for i in 0..<numPoints {
+            let angle = Double(i) * deltaAngle - .pi
+            let testPoint = point + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
+            let isContained = prismView.path.contains(convert(testPoint, to: prismView))
+            isContainedArray.append(isContained)
+        }
+        // of all direction pointing into shape, return middle one
+        if let middleTrueIndex = isContainedArray.indexOfMiddleTrue {
+            return Double(middleTrueIndex) * deltaAngle - .pi
+        } else {
+            return nil
+        }
+    }
+        
+    // MARK: - Gestures handlers
     
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
         if let pannedView = recognizer.view {

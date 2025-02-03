@@ -54,6 +54,29 @@ extension CGPoint {
     }
 }
 
+extension Array where Element == Double {
+    var average: Double {
+        self.reduce(0, +) / Double(self.count)
+    }
+}
+
+extension Array where Element == Bool {
+    var indexOfMiddleTrue: Int? {  // middle assuming array is circular
+        let trueCount = self.count(where: { $0 } )
+        guard trueCount > 0 else { return nil }
+        if var index = self.firstIndex(where: { !$0 } ) {  // start at first false
+            var numTrue = 0
+            repeat {
+                index = (index + 1) % self.count  // wrap around
+                if self[index] { numTrue += 1 }
+            } while numTrue < trueCount / 2
+            return index
+        } else {
+            return nil
+        }
+    }
+}
+
 extension TimeInterval {
     var second: Int {
         Int(truncatingRemainder(dividingBy: 60))
