@@ -23,6 +23,9 @@ class BoardView: UIView {
         prismView.frame = CGRect(x: 100, y: 200, width: Constant.prismSideLength, height: Constant.prismSideLength * sin(60.rads))
         prismView.backgroundColor = .clear
         addSubview(prismView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        prismView.addGestureRecognizer(pan)
     }
     
     override func draw(_ rect: CGRect) {
@@ -41,5 +44,14 @@ class BoardView: UIView {
         UIColor.white.setStroke()
         light.lineWidth = 2
         light.stroke()
+    }
+    
+    @objc func handlePan(recognizer: UIPanGestureRecognizer) {
+        if let pannedView = recognizer.view {
+            let translation = recognizer.translation(in: self)
+            pannedView.center += translation
+            recognizer.setTranslation(.zero, in: self)
+            setNeedsDisplay()
+        }
     }
 }
