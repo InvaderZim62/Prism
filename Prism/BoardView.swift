@@ -9,13 +9,15 @@ import UIKit
 
 struct Constant {
     static let prismSideLength = 200.0
+    static let refractiveIndexOfAir = 1.0
+    static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
 }
 
 class BoardView: UIView {
 
     let prismView = PrismView()
     
-    var lightAngle = 0.rads  // +/-.pi radians (0 right, positive clockwise)
+    let lightDirectionInAir = 0.rads  // +/-.pi radians (0 right, positive clockwise)
     var lightSourceStartingPoint = CGPoint(x: 50, y: 280)
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
@@ -40,21 +42,39 @@ class BoardView: UIView {
         var point = lightSourceStartingPoint
         let light = UIBezierPath()
         light.move(to: point)
+        // propagate light through air, until contacting prism (or off screen)
         while !prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
-            point += CGPoint(x: step * cos(lightAngle), y: step * sin(lightAngle))
+            point += CGPoint(x: step * cos(lightDirectionInAir), y: step * sin(lightDirectionInAir))
             light.addLine(to: point)
+        }
+        // light contacted prism - find surface normal direction
+        if let surfaceNormalAngle = surfaceNormalAngleAtPoint(point) {
+            // draw small vector in normal direction, for now
+            drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
+            // compute new direction through prism
+            let angleOfIncidence = surfaceNormalAngle - lightDirectionInAir
+            let angleOfRefraction = asin(Constant.refractiveIndexOfAir / Constant.refractiveIndexOfGlass * sin(angleOfIncidence))
+            let lightDirectionInGlass = surfaceNormalAngle - angleOfRefraction
+            // propagate light through prism, until contacting air (or off screen)
+            while prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
+                point += CGPoint(x: step * cos(lightDirectionInGlass), y: step * sin(lightDirectionInGlass))
+                light.addLine(to: point)
+            }
         }
         UIColor.white.setStroke()
         light.lineWidth = 2
         light.stroke()
-        
-        if let normalAngle = surfaceNormalAngleAtPoint(point) {
-            let normal = UIBezierPath()
-            normal.move(to: point)
-            normal.addLine(to: point + CGPoint(x: 20 * cos(normalAngle), y: 20 * sin(normalAngle)))
-            UIColor.red.setStroke()
-            normal.stroke()
-        }
+    }
+    
+    // MARK: - Utilities
+    
+    private func drawVectorAt(_ point: CGPoint, inDirection direction: Double, color: UIColor) {
+        let normal = UIBezierPath()
+        normal.move(to: point)
+        normal.addLine(to: point + CGPoint(x: 30 * cos(direction), y: 30 * sin(direction)))
+        color.setStroke()
+        normal.setLineDash([5, 5], count: 2, phase: 0)
+        normal.stroke()
     }
     
     // direction of surface normal pointing toward the inside of the shape
@@ -70,7 +90,7 @@ class BoardView: UIView {
             let isContained = prismView.path.contains(convert(testPoint, to: prismView))
             isContainedArray.append(isContained)
         }
-        // of all direction pointing into shape, return middle one
+        // of all directions pointing into shape, return middle one (should be normal to surface)
         if let middleTrueIndex = isContainedArray.indexOfMiddleTrue {
             return Double(middleTrueIndex) * deltaAngle - .pi
         } else {
