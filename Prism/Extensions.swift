@@ -8,13 +8,26 @@
 import UIKit
 
 extension Double {
+    // limit in place
+    // usage: myDouble.limitBetween(-1, 1)
     mutating func limitBetween(_ minVal: Double, and maxVal: Double) {
         assert(minVal <= maxVal, "First argument must be less than second argument in call to limitBetween")
         self = min(max(self, minVal), maxVal)
     }
     
+    // return limited value
+    // usage: newDouble = myDouble.limitedBetween(-1, 1)
+    mutating func limitedBetween(_ minVal: Double, and maxVal: Double) -> Double {
+        assert(minVal <= maxVal, "First argument must be less than second argument in call to limitBetween")
+        return min(max(self, minVal), maxVal)
+    }
+    
     var rads: Double {
-        return self * Double.pi / 180.0
+        self * .pi / 180
+    }
+    
+    var degs: Double {
+        self * 180 / .pi
     }
 
     // converts angle from +/-2 pi to +/-pi

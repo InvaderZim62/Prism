@@ -17,13 +17,16 @@ class BoardView: UIView {
 
     let prismView = PrismView()
     
-    let lightDirectionInAir = 0.rads  // +/-.pi radians (0 right, positive clockwise)
-    var lightSourceStartingPoint = CGPoint(x: 50, y: 280)
+//    var lightSourceStartingPoint = CGPoint(x: 50, y: 280)
+//    let lightDirectionStartingDirection = 0.rads  // +/-.pi radians (0 right, positive clockwise)
+    let lightSourceStartingPoint = CGPoint(x: 50, y: 320)
+    let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
         prismView.frame = CGRect(x: 100, y: 200, width: Constant.prismSideLength, height: Constant.prismSideLength * sin(60.rads))
         prismView.backgroundColor = .clear
+//        prismView.transform = prismView.transform.rotated(by: -0.35)  // pws: initial rotation
         addSubview(prismView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
@@ -37,30 +40,69 @@ class BoardView: UIView {
         drawLight()
     }
     
+    private func isInside(_ prismView: PrismView, point: CGPoint) -> Bool {
+        prismView.path.contains(convert(point, to: prismView))
+    }
+    
     private func drawLight() {
-        let step = 2.0
         var point = lightSourceStartingPoint
+        guard !isInside(prismView, point: point) else { return }  // might want to allow starting inside prism (skip to propagate light through prism)
+        var mediumsTraversed = 0
+        var lightDirections = [lightSourceStartingDirection]
+        let step = 2.0
         let light = UIBezierPath()
         light.move(to: point)
+        
         // propagate light through air, until contacting prism (or off screen)
-        while !prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
-            point += CGPoint(x: step * cos(lightDirectionInAir), y: step * sin(lightDirectionInAir))
+        while !isInside(prismView, point: point) && isOnScreen(point) {
+            let lightDirection = lightDirections[mediumsTraversed]
+            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
             light.addLine(to: point)
         }
+        guard isOnScreen(point) else { finishDrawingLight(light); return }
         // light contacted prism - find surface normal direction
-        if let surfaceNormalAngle = surfaceNormalAngleAtPoint(point) {
-            // draw small vector in normal direction, for now
-            drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
-            // compute new direction through prism
-            let angleOfIncidence = surfaceNormalAngle - lightDirectionInAir
-            let angleOfRefraction = asin(Constant.refractiveIndexOfAir / Constant.refractiveIndexOfGlass * sin(angleOfIncidence))
-            let lightDirectionInGlass = surfaceNormalAngle - angleOfRefraction
-            // propagate light through prism, until contacting air (or off screen)
-            while prismView.path.contains(convert(point, to: prismView)) && frame.contains(point) {
-                point += CGPoint(x: step * cos(lightDirectionInGlass), y: step * sin(lightDirectionInGlass))
-                light.addLine(to: point)
-            }
+        var surfaceNormalAngle = surfaceNormalAngleAtPoint(point)!
+        // draw small vector in normal direction, for now
+        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
+        // compute new direction through prism
+        var angleOfIncidence = surfaceNormalAngle - lightDirections[mediumsTraversed]
+        var sinTheta2 = (Constant.refractiveIndexOfAir / Constant.refractiveIndexOfGlass * sin(angleOfIncidence))
+        var angleOfRefraction = asin(sinTheta2.limitedBetween(-1, and: 1))
+        lightDirections.append(surfaceNormalAngle - angleOfRefraction)
+        print("air to glass")
+        print(String(format: "light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", lightDirections[mediumsTraversed].degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirections[mediumsTraversed + 1].degs))
+        mediumsTraversed += 1
+        
+        // propagate light through prism, until contacting air (or off screen)
+        while isInside(prismView, point: point) && isOnScreen(point) {
+            let lightDirection = lightDirections[mediumsTraversed]
+            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
+            light.addLine(to: point)
         }
+        guard isOnScreen(point) else { finishDrawingLight(light); return }
+        // light contacted air - find surface normal direction
+        surfaceNormalAngle = surfaceNormalAngleAtPoint(point)! - .pi
+        // draw small vector in normal direction, for now
+        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
+        // compute new direction through air
+        angleOfIncidence = surfaceNormalAngle - lightDirections[mediumsTraversed]
+        sinTheta2 = (Constant.refractiveIndexOfGlass / Constant.refractiveIndexOfAir * sin(angleOfIncidence))
+        angleOfRefraction = asin(sinTheta2.limitedBetween(-1, and: 1))
+        lightDirections.append(surfaceNormalAngle - angleOfRefraction)
+        print("glass to air")
+        print(String(format: "light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", lightDirections[mediumsTraversed].degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirections[mediumsTraversed + 1].degs))
+        mediumsTraversed += 1
+
+        // propagate light through air, until off screen
+        while isOnScreen(point) {
+            let lightDirection = lightDirections[mediumsTraversed]
+            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
+            light.addLine(to: point)
+        }
+        finishDrawingLight(light)
+    }
+    
+    private func finishDrawingLight(_ light: UIBezierPath) {
         UIColor.white.setStroke()
         light.lineWidth = 2
         light.stroke()
@@ -68,6 +110,10 @@ class BoardView: UIView {
     
     // MARK: - Utilities
     
+    private func isOnScreen(_ point: CGPoint) -> Bool {
+        frame.contains(point)
+    }
+
     private func drawVectorAt(_ point: CGPoint, inDirection direction: Double, color: UIColor) {
         let normal = UIBezierPath()
         normal.move(to: point)
