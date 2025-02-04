@@ -8,25 +8,42 @@
 import UIKit
 
 struct Constant {
-    static let prismSideLength = 200.0
+    static let prismSideLength = 180.0
+    static let lightSourceSideLength = 140.0  // view size (bigger than drawing)
     static let refractiveIndexOfAir = 1.0
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
+    static let lightSourceStartingCenter = CGPoint(x: 50, y: 320)
+    static let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
 }
 
 class BoardView: UIView {
 
+    let lightSourceView = LightSourceView()
     let prismView = PrismView()
-    
-//    var lightSourceStartingPoint = CGPoint(x: 50, y: 280)
-//    let lightDirectionStartingDirection = 0.rads  // +/-.pi radians (0 right, positive clockwise)
-    let lightSourceStartingPoint = CGPoint(x: 50, y: 320)
-    let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
+        setupLightSource()
+        setupPrismView()
+    }
+    
+    private func setupLightSource() {
+        lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
+        lightSourceView.center = Constant.lightSourceStartingCenter
+        lightSourceView.transform = prismView.transform.rotated(by: Constant.lightSourceStartingDirection)
+        lightSourceView.backgroundColor = .clear
+        addSubview(lightSourceView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        lightSourceView.addGestureRecognizer(pan)
+        
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        lightSourceView.addGestureRecognizer(rotation)
+    }
+    
+    private func setupPrismView() {
         prismView.frame = CGRect(x: 100, y: 200, width: Constant.prismSideLength, height: Constant.prismSideLength * sin(60.rads))
         prismView.backgroundColor = .clear
-//        prismView.transform = prismView.transform.rotated(by: -0.35)  // pws: initial rotation
         addSubview(prismView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
@@ -36,19 +53,17 @@ class BoardView: UIView {
         prismView.addGestureRecognizer(rotation)
     }
     
+    // MARK: - Draw
+    
     override func draw(_ rect: CGRect) {
         drawLight()
     }
     
-    private func isInside(_ prismView: PrismView, point: CGPoint) -> Bool {
-        prismView.path.contains(convert(point, to: prismView))
-    }
-    
     private func drawLight() {
-        var point = lightSourceStartingPoint
+        var point = lightSourceView.outputPoint
         guard !isInside(prismView, point: point) else { return }  // might want to allow starting inside prism (skip to propagate light through prism)
         var mediumsTraversed = 0
-        var lightDirections = [lightSourceStartingDirection]
+        var lightDirections = [lightSourceView.direction]
         let step = 2.0
         let light = UIBezierPath()
         light.move(to: point)
@@ -96,6 +111,10 @@ class BoardView: UIView {
     
     // MARK: - Utilities
     
+    private func isInside(_ prismView: PrismView, point: CGPoint) -> Bool {
+        prismView.path.contains(convert(point, to: prismView))
+    }
+
     private func isOnScreen(_ point: CGPoint) -> Bool {
         frame.contains(point)
     }
