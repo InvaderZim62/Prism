@@ -10,7 +10,7 @@ import UIKit
 class PrismView: UIView {
 
     // create path before drawing, since superview's draw runs before subview's draw,
-    // and superview's draw needs path
+    // and superview's draw uses path to determine which light points are inside prism
     lazy var path: UIBezierPath = {
         let prism = UIBezierPath()
         prism.move(to: CGPoint(x: bounds.midX, y: 1))

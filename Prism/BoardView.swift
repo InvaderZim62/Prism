@@ -61,7 +61,6 @@ class BoardView: UIView {
         }
         guard isOnScreen(point) else { finishDrawingLight(light); return }
         
-        print("\nair to glass")
         // determine light direction through prism
         let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: true)
         lightDirections.append(lightDirectionPrism)
@@ -75,7 +74,6 @@ class BoardView: UIView {
         }
         guard isOnScreen(point) else { finishDrawingLight(light); return }
         
-        print("glass to air")
         // determine light direction through air
         let lightDirectionAir = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: false)
         lightDirections.append(lightDirectionAir)
@@ -105,14 +103,13 @@ class BoardView: UIView {
     // light direction after crossing surface boundary
     private func lightDirectionOut(lightDirectionIn: Double, point: CGPoint, isEnteringPrism: Bool) -> Double {
         let surfaceNormalAngle = surfaceNormalAngleAtPoint(point)! + (isEnteringPrism ? 0 : .pi)
-        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
+//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
         let angleOfIncidence = surfaceNormalAngle - lightDirectionIn
         var refractionRatio = Constant.refractiveIndexOfAir / Constant.refractiveIndexOfGlass
         if !isEnteringPrism { refractionRatio = 1 / refractionRatio }
         var sinTheta2 = (refractionRatio * sin(angleOfIncidence))
         let angleOfRefraction = asin(sinTheta2.limitedBetween(-1, and: 1))
         let lightDirectionOut = surfaceNormalAngle - angleOfRefraction
-        print(String(format: "light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
         return lightDirectionOut
     }
 
