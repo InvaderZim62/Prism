@@ -14,6 +14,7 @@ struct Constant {
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
     static let lightSourceStartingCenter = CGPoint(x: 50, y: 320)
     static let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
+    static let lightPropagationStepSize = 2.0
 }
 
 class BoardView: UIView {
@@ -62,20 +63,30 @@ class BoardView: UIView {
     private func drawLight() {
         var point = lightSourceView.outputPoint
         guard !isInside(prismView, point: point) else { return }  // might want to allow starting inside prism (skip to propagate light through prism)
-        var mediumsTraversed = 0
-        var lightDirections = [lightSourceView.direction]
-        let step = 2.0
+        let lightDirection = lightSourceView.direction
         let light = UIBezierPath()
         light.move(to: point)
         
         // propagate light through air, until contacting prism (or off screen)
         while !isInside(prismView, point: point) && isOnScreen(point) {
-            let lightDirection = lightDirections[mediumsTraversed]
-            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
+                             y: Constant.lightPropagationStepSize * sin(lightDirection))
             light.addLine(to: point)
         }
-        guard isOnScreen(point) else { finishDrawingLight(light); return }
+        finishDrawingLight(light, color: .white)
+        guard isOnScreen(point) else { return }
         
+        // continue propagating each individual color through prism and beyond
+        continuePropagatingIndividualColor(.green, startingLightDirection: lightDirection, startingPoint: point)
+    }
+    
+    private func continuePropagatingIndividualColor(_ color: UIColor, startingLightDirection: Double, startingPoint: CGPoint) {
+        var point = startingPoint
+        var mediumsTraversed = 0
+        var lightDirections = [startingLightDirection]
+        let light = UIBezierPath()
+        light.move(to: point)
+
         // bend light at prism interface
         let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: true)
         lightDirections.append(lightDirectionPrism)
@@ -84,27 +95,29 @@ class BoardView: UIView {
         // propagate light through prism, until contacting air (or off screen)
         while isInside(prismView, point: point) && isOnScreen(point) {
             let lightDirection = lightDirections[mediumsTraversed]
-            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
+                             y: Constant.lightPropagationStepSize * sin(lightDirection))
             light.addLine(to: point)
         }
-        guard isOnScreen(point) else { finishDrawingLight(light); return }
+        guard isOnScreen(point) else { finishDrawingLight(light, color: color); return }
         
         // bend light at air interface
         let lightDirectionAir = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: false)
         lightDirections.append(lightDirectionAir)
         mediumsTraversed += 1
-
+        
         // propagate light through air, until off screen
         while isOnScreen(point) {
             let lightDirection = lightDirections[mediumsTraversed]
-            point += CGPoint(x: step * cos(lightDirection), y: step * sin(lightDirection))
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
+                             y: Constant.lightPropagationStepSize * sin(lightDirection))
             light.addLine(to: point)
         }
-        finishDrawingLight(light)
+        finishDrawingLight(light, color: color)
     }
     
-    private func finishDrawingLight(_ light: UIBezierPath) {
-        UIColor.white.setStroke()
+    private func finishDrawingLight(_ light: UIBezierPath, color: UIColor) {
+        color.setStroke()
         light.lineWidth = 2
         light.stroke()
     }
