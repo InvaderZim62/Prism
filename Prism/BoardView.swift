@@ -76,7 +76,7 @@ class BoardView: UIView {
         }
         guard isOnScreen(point) else { finishDrawingLight(light); return }
         
-        // determine light direction through prism
+        // bend light at prism interface
         let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: true)
         lightDirections.append(lightDirectionPrism)
         mediumsTraversed += 1
@@ -89,7 +89,7 @@ class BoardView: UIView {
         }
         guard isOnScreen(point) else { finishDrawingLight(light); return }
         
-        // determine light direction through air
+        // bend light at air interface
         let lightDirectionAir = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed], point: point, isEnteringPrism: false)
         lightDirections.append(lightDirectionAir)
         mediumsTraversed += 1
