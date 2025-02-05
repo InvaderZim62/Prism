@@ -8,15 +8,15 @@
 import UIKit
 
 struct Constant {
-    static let lightWaveLengths = stride(from: 400.0, through: 680.0, by: 40.0)
-    static let prismSideLength = 180.0
+    static let lightWaveLengths = stride(from: 400.0, through: 680.0, by: 10.0)
+    static let prismSideLength = 140.0
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing)
     static let refractiveIndexOfAir = 1.0
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
     static let prismStartingCenter = CGPoint(x: 200, y: 150)
     static let lightSourceStartingCenter = CGPoint(x: 50, y: 180)
     static let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
-    static let lightPropagationStepSize = 2.0
+    static let lightPropagationStepSize = 1.0
 }
 
 class BoardView: UIView {
@@ -81,22 +81,17 @@ class BoardView: UIView {
         
         // continue propagating each individual color through prism and beyond
         for wavelength in Constant.lightWaveLengths {
-            continuePropagatingLightWith(wavelength: wavelength, startingLightDirection: lightDirection, startingPoint: point)
+            continuePropagatingLightWith(wavelength: wavelength, startingDirection: lightDirection, startingPoint: point)
         }
-//        for (index, wavelength) in Constant.lightWaveLengths.enumerated() {
-//            // offset slightly, so last color (red) doesn't start out covering everything
-//            let offset = CGPoint(x: 0.2 * Double(index), y: 0.2 * Double(index))
-//            continuePropagatingLightWith(wavelength: wavelength, startingLightDirection: lightDirection, startingPoint: point + offset)
-//        }
     }
     
-    private func continuePropagatingLightWith(wavelength: Double, startingLightDirection: Double, startingPoint: CGPoint) {
+    private func continuePropagatingLightWith(wavelength: Double, startingDirection: Double, startingPoint: CGPoint) {
         let color = colorForWavelength(wavelength)
         let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
         
         var point = startingPoint
         var mediumsTraversed = 0
-        var lightDirections = [startingLightDirection]
+        var lightDirections = [startingDirection]
         let light = UIBezierPath()
         light.move(to: point)
 
@@ -168,7 +163,7 @@ class BoardView: UIView {
     // +/-.pi radians (0 right, positive clockwise)
     private func surfaceNormalAngleAtPoint(_ point: CGPoint) -> Double? {
         let radius = 4.0
-        let numPoints = 180  // every 2 degrees
+        let numPoints = 360  // every 1 degrees
         let deltaAngle = 2 * .pi / Double(numPoints)
         var isContainedArray = [Bool]()
         for i in 0..<numPoints {
@@ -178,7 +173,6 @@ class BoardView: UIView {
             isContainedArray.append(isContained)
         }
         // of all directions pointing into shape, return middle one (should be normal to surface)
-        // pws: consider averaging middle two, if even number of true's
         if let middleTrueIndex = isContainedArray.indexOfMiddleTrue {
             return Double(middleTrueIndex) * deltaAngle - .pi
         } else {
