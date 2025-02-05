@@ -11,7 +11,8 @@ class ViewController: UIViewController {
         
     @IBOutlet weak var boardView: BoardView!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        boardView.setNeedsDisplay()
     }
 }

@@ -178,6 +178,7 @@ class BoardView: UIView {
             isContainedArray.append(isContained)
         }
         // of all directions pointing into shape, return middle one (should be normal to surface)
+        // pws: consider averaging middle two, if even number of true's
         if let middleTrueIndex = isContainedArray.indexOfMiddleTrue {
             return Double(middleTrueIndex) * deltaAngle - .pi
         } else {
