@@ -8,7 +8,7 @@
 import UIKit
 
 struct Constant {
-    static let lightWaveLengths = stride(from: 400.0, through: 680.0, by: 10.0)
+    static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)
     static let prismSideLength = 140.0
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing)
     static let refractiveIndexOfAir = 1.0
@@ -64,36 +64,34 @@ class BoardView: UIView {
     }
     
     private func drawLight() {
-        var point = lightSourceView.outputPoint
-        guard !isInside(prismView, point: point) else { return }  // might want to allow starting inside prism (skip to propagate light through prism)
-        let lightDirection = lightSourceView.direction
+        let startingPoint = lightSourceView.outputPoint
+        let startingDirection = lightSourceView.direction
+        guard !isInside(prismView, point: startingPoint) else { return }  // might want to allow starting inside prism
+        
+        // propagate separate light wavelengths/colors
+        for wavelength in Constant.wavelengths {
+            propagateLightWith(wavelength: wavelength, startingPoint: startingPoint, startingDirection: startingDirection)
+        }
+    }
+    
+    private func propagateLightWith(wavelength: Double, startingPoint: CGPoint, startingDirection: Double) {
+        let color = colorForWavelength(wavelength)
+        let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
+        var point = startingPoint
+        var lightDirections = [startingDirection]  // keep separate directions for each medium
+        var mediumsTraversed = 0
+        
         let light = UIBezierPath()
         light.move(to: point)
         
         // propagate light through air, until contacting prism (or off screen)
         while !isInside(prismView, point: point) && isOnScreen(point) {
-            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
-                             y: Constant.lightPropagationStepSize * sin(lightDirection))
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirections[mediumsTraversed]),
+                             y: Constant.lightPropagationStepSize * sin(lightDirections[mediumsTraversed]))
             light.addLine(to: point)
         }
         finishDrawingLight(light, color: .white)
         guard isOnScreen(point) else { return }
-        
-        // continue propagating separate light wavelengths/colors through prism and beyond
-        for wavelength in Constant.lightWaveLengths {
-            continuePropagatingLightWith(wavelength: wavelength, startingDirection: lightDirection, startingPoint: point)
-        }
-    }
-    
-    private func continuePropagatingLightWith(wavelength: Double, startingDirection: Double, startingPoint: CGPoint) {
-        let color = colorForWavelength(wavelength)
-        let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
-        
-        var point = startingPoint
-        var mediumsTraversed = 0
-        var lightDirections = [startingDirection]
-        let light = UIBezierPath()
-        light.move(to: point)
 
         // bend light at prism interface
         let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed],
