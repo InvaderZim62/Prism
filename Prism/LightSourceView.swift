@@ -30,7 +30,9 @@ class LightSourceView: UIView {
                                                          y: (1 - LightConst.widthPercent) / 2 * bounds.height,
                                                          width: width,
                                                          height: height),
-                                     cornerRadius: 0)
+                                     cornerRadius: 0.01)
+        UIColor.black.setFill()
+        rectangle.fill()
         UIColor.lightGray.setStroke()
         rectangle.lineWidth = 2
         rectangle.stroke()

@@ -26,22 +26,8 @@ class BoardView: UIView {
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
-        setupLightSource()
         setupPrismView()
-    }
-    
-    private func setupLightSource() {
-        lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
-        lightSourceView.center = Constant.lightSourceStartingCenter
-        lightSourceView.transform = prismView.transform.rotated(by: Constant.lightSourceStartingDirection)
-        lightSourceView.backgroundColor = .clear
-        addSubview(lightSourceView)
-        
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        lightSourceView.addGestureRecognizer(pan)
-        
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        lightSourceView.addGestureRecognizer(rotation)
+        setupLightSource()
     }
     
     private func setupPrismView() {
@@ -57,6 +43,20 @@ class BoardView: UIView {
         prismView.addGestureRecognizer(rotation)
     }
     
+    private func setupLightSource() {
+        lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
+        lightSourceView.center = Constant.lightSourceStartingCenter
+        lightSourceView.transform = prismView.transform.rotated(by: Constant.lightSourceStartingDirection)
+        lightSourceView.backgroundColor = .clear
+        addSubview(lightSourceView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        lightSourceView.addGestureRecognizer(pan)
+        
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        lightSourceView.addGestureRecognizer(rotation)
+    }
+
     // MARK: - Draw
     
     override func draw(_ rect: CGRect) {
