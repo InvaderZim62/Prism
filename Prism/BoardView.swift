@@ -79,7 +79,7 @@ class BoardView: UIView {
         finishDrawingLight(light, color: .white)
         guard isOnScreen(point) else { return }
         
-        // continue propagating each individual color through prism and beyond
+        // continue propagating separate light wavelengths/colors through prism and beyond
         for wavelength in Constant.lightWaveLengths {
             continuePropagatingLightWith(wavelength: wavelength, startingDirection: lightDirection, startingPoint: point)
         }
@@ -148,33 +148,33 @@ class BoardView: UIView {
     
     // light direction after crossing surface boundary
     private func lightDirectionOut(lightDirectionIn: Double, point: CGPoint, refractiveIndexOfGlass: Double, isEnteringPrism: Bool) -> Double {
-        let surfaceNormalAngle = surfaceNormalAngleAtPoint(point)! + (isEnteringPrism ? 0 : .pi)
-//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)
+        let surfaceNormalAngle = surfaceNormalAngleAtPoint(point)! + (isEnteringPrism ? 0 : .pi)  // normal to surface on incoming side
+//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
         let angleOfIncidence = surfaceNormalAngle - lightDirectionIn
-        var refractionRatio = Constant.refractiveIndexOfAir / refractiveIndexOfGlass
-        if !isEnteringPrism { refractionRatio = 1 / refractionRatio }
-        var sinTheta2 = (refractionRatio * sin(angleOfIncidence))
-        let angleOfRefraction = asin(sinTheta2.limitedBetween(-1, and: 1))
+        let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
+        let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
         let lightDirectionOut = surfaceNormalAngle - angleOfRefraction
         return lightDirectionOut
     }
 
-    // direction of surface normal pointing toward inside of prismView
+    // direction of surface normal pointing toward inside of prismView;
     // +/-.pi radians (0 right, positive clockwise)
+    // found by checking a ring of points around input point, for points inside prismView;
+    // return the middle of all points inside (easier then averaging across any discontinuity in angles);
     private func surfaceNormalAngleAtPoint(_ point: CGPoint) -> Double? {
         let radius = 4.0
-        let numPoints = 360  // every 1 degrees
+        let numPoints = 360  // every degrees around circle
         let deltaAngle = 2 * .pi / Double(numPoints)
-        var isContainedArray = [Bool]()
+        var isDirectionInsidePrism = [Bool]()
         for i in 0..<numPoints {
             let angle = Double(i) * deltaAngle - .pi
             let testPoint = point + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
-            let isContained = prismView.path.contains(convert(testPoint, to: prismView))
-            isContainedArray.append(isContained)
+            let isInside = prismView.path.contains(convert(testPoint, to: prismView))
+            isDirectionInsidePrism.append(isInside)
         }
         // of all directions pointing into shape, return middle one (should be normal to surface)
-        if let middleTrueIndex = isContainedArray.indexOfMiddleTrue {
-            return Double(middleTrueIndex) * deltaAngle - .pi
+        if let middleIndex = isDirectionInsidePrism.indexOfMiddleTrue {
+            return Double(middleIndex) * deltaAngle - .pi
         } else {
             return nil
         }
@@ -201,27 +201,27 @@ class BoardView: UIView {
         var green = 0.0
         var blue = 0.0
         
-        if((wavelength >= 380) && (wavelength < 440)) {
+        if wavelength >= 380 && wavelength < 440 {
             red = -(wavelength - 440) / (440 - 380)
             green = 0.0
             blue = 1.0
-        } else if((wavelength >= 440) && (wavelength < 490)) {
+        } else if wavelength >= 440 && wavelength < 490 {
             red = 0.0
             green = (wavelength - 440) / (490 - 440)
             blue = 1.0
-        } else if((wavelength >= 490) && (wavelength < 510)) {
+        } else if wavelength >= 490 && wavelength < 510 {
             red = 0.0
             green = 1.0
             blue = -(wavelength - 510) / (510 - 490)
-        } else if((wavelength >= 510) && (wavelength < 580)) {
+        } else if wavelength >= 510 && wavelength < 580 {
             red = (wavelength - 510) / (580 - 510)
             green = 1.0
             blue = 0.0
-        } else if((wavelength >= 580) && (wavelength < 645)) {
+        } else if wavelength >= 580 && wavelength < 645 {
             red = 1.0
             green = -(wavelength - 645) / (645 - 580)
             blue = 0.0
-        } else if((wavelength >= 645) && (wavelength < 781)) {
+        } else if wavelength >= 645 && wavelength < 781 {
             red = 1.0
             green = 0.0
             blue = 0.0
@@ -231,7 +231,7 @@ class BoardView: UIView {
             blue = 0.0
         }
         
-        // Let the intensity fall off near the vision limits
+        // make intensity fall off near vision limits
         if((wavelength >= 380) && (wavelength < 420)) {
             factor = 0.3 + 0.7 * (wavelength - 380) / (420 - 380)
         } else if((wavelength >= 420) && (wavelength < 701)) {

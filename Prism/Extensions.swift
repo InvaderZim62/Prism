@@ -17,7 +17,7 @@ extension Double {
     
     // return limited value
     // usage: newDouble = myDouble.limitedBetween(-1, 1)
-    mutating func limitedBetween(_ minVal: Double, and maxVal: Double) -> Double {
+    func limitedBetween(_ minVal: Double, and maxVal: Double) -> Double {
         assert(minVal <= maxVal, "First argument must be less than second argument in call to limitBetween")
         return min(max(self, minVal), maxVal)
     }
