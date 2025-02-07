@@ -8,7 +8,7 @@
 import UIKit
 
 struct RectangleConst {
-    static let widthPercent = 0.5//0.2  // percent bounds.width
+    static let widthPercent = 1.0  // percent bounds.width
 }
 
 class RectangleView: UIView, PathProvider {
@@ -19,9 +19,9 @@ class RectangleView: UIView, PathProvider {
     // create path before drawing, since superview's draw runs before subview's draw,
     // and superview's draw uses path to determine which light points are inside shape
     lazy var path: UIBezierPath = {
-        let rectangle = UIBezierPath(roundedRect: CGRect(x: (1 - RectangleConst.widthPercent) / 2 * bounds.width,
+        let rectangle = UIBezierPath(roundedRect: CGRect(x: (1 - RectangleConst.widthPercent) / 2 * bounds.width + 1.0,
                                                          y: 1,
-                                                         width: width,
+                                                         width: width - 2,
                                                          height: height - 2),
                                      cornerRadius: 0.01)
         return rectangle
