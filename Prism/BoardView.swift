@@ -102,7 +102,7 @@ class BoardView: UIView {
         let color = colorForWavelength(wavelength)
         let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
         var point = startingPoint
-        var lightDirections = [startingDirection]  // keep separate directions for each medium
+        var directions = [startingDirection]  // keep separate directions for each medium
         var mediumsTraversed = 0
         
         let light = UIBezierPath()
@@ -111,48 +111,58 @@ class BoardView: UIView {
         for _ in 0..<prismViews.count + 1 {
             
             // propagate light through air, until contacting prism (or off screen)
-            repeat {
-                point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirections[mediumsTraversed]),
-                                 y: Constant.lightPropagationStepSize * sin(lightDirections[mediumsTraversed]))
-                light.addLine(to: point)
-                if isOffScreen(point) {
-                    finishDrawingLight(light, color: color)
-                    return
-                }
-            } while prismContainingPoint(point) == nil
+            guard propagateLightThroughAir(light: light, direction: directions[mediumsTraversed], point: &point, color: color) else { return }
             
             // bend light at prism interface
             let prismView = prismContainingPoint(point)!
-            let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed],
-                                                        point: point,
-                                                        refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                        prismView: prismView,
-                                                        isEnteringPrism: true)
-            lightDirections.append(lightDirectionPrism)
+            let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                          point: point,
+                                                          refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                          prismView: prismView,
+                                                          isEnteringPrism: true)
+            directions.append(lightDirectionInPrism)
             mediumsTraversed += 1
             
             // propagate light through prism, until contacting air (or off screen)
-            repeat {
-                let lightDirection = lightDirections[mediumsTraversed]
-                point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
-                                 y: Constant.lightPropagationStepSize * sin(lightDirection))
-                light.addLine(to: point)
-                if isOffScreen(point) {
-                    finishDrawingLight(light, color: color)
-                    return
-                }
-            } while isInside(prismView, point: point)
-            
+            guard propagateLightThroughPrism(prismView, light: light, direction: directions[mediumsTraversed], point: &point, color: color) else { return }
+
             // bend light at air interface
-            let lightDirectionAir = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed],
-                                                      point: point,
-                                                      refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                      prismView: prismView,
-                                                      isEnteringPrism: false)
-            lightDirections.append(lightDirectionAir)
+            let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                        point: point,
+                                                        refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                        prismView: prismView,
+                                                        isEnteringPrism: false)
+            directions.append(lightDirectionInAir)
             mediumsTraversed += 1
         }
         finishDrawingLight(light, color: color)
+    }
+    
+    private func propagateLightThroughAir(light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+        repeat {
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
+                             y: Constant.lightPropagationStepSize * sin(direction))
+            light.addLine(to: point)
+            if isOffScreen(point) {
+                finishDrawingLight(light, color: color)
+                return false
+            }
+        } while prismContainingPoint(point) == nil
+        return true
+    }
+
+    private func propagateLightThroughPrism(_ prismView: PathProvider, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+        repeat {
+            let lightDirection = direction
+            point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
+                             y: Constant.lightPropagationStepSize * sin(lightDirection))
+            light.addLine(to: point)
+            if isOffScreen(point) {
+                finishDrawingLight(light, color: color)
+                return false
+            }
+        } while isInside(prismView, point: point)
+        return true
     }
     
     private func finishDrawingLight(_ light: UIBezierPath, color: UIColor) {
