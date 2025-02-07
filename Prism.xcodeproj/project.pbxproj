@@ -17,6 +17,7 @@
 		4A9473212D501E4B0083E9BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473202D501E4B0083E9BF /* Extensions.swift */; };
 		4A9473232D5033AC0083E9BF /* TriangleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473222D5033AC0083E9BF /* TriangleView.swift */; };
 		4AF8022F2D52B87900664B33 /* LightSourceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF8022E2D52B87900664B33 /* LightSourceView.swift */; };
+		4AFD13B92D55510900B1981B /* RectangleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD13B82D55510900B1981B /* RectangleView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		4A9473202D501E4B0083E9BF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		4A9473222D5033AC0083E9BF /* TriangleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriangleView.swift; sourceTree = "<group>"; };
 		4AF8022E2D52B87900664B33 /* LightSourceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightSourceView.swift; sourceTree = "<group>"; };
+		4AFD13B82D55510900B1981B /* RectangleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +82,7 @@
 				4A94731C2D4F24A80083E9BF /* BoardView.swift */,
 				4AF8022E2D52B87900664B33 /* LightSourceView.swift */,
 				4A9473222D5033AC0083E9BF /* TriangleView.swift */,
+				4AFD13B82D55510900B1981B /* RectangleView.swift */,
 				4A9473202D501E4B0083E9BF /* Extensions.swift */,
 				4A94730D2D4F0DE70083E9BF /* Supporting Files */,
 				4A94730E2D4F0DE70083E9BF /* Info.plist */,
@@ -167,6 +170,7 @@
 				4A9473232D5033AC0083E9BF /* TriangleView.swift in Sources */,
 				4A94731D2D4F24A80083E9BF /* BoardView.swift in Sources */,
 				4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */,
+				4AFD13B92D55510900B1981B /* RectangleView.swift in Sources */,
 				4A9473152D4F0DE70083E9BF /* ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

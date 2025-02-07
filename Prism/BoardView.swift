@@ -9,24 +9,33 @@ import UIKit
 
 struct Constant {
     static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)
+//    static let wavelengths = [500.0]  // green light
+    static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
     static let triangleSideLength = 140.0
-    static let lightSourceSideLength = 140.0  // view size (bigger than drawing)
+    static let rectangleSize = 120.0
     static let refractiveIndexOfAir = 1.0
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
     static let triangleStartingCenter = CGPoint(x: 200, y: 150)
+    static let rectangleStartingCenter = CGPoint(x: 200, y: 300)
     static let lightSourceStartingCenter = CGPoint(x: 50, y: 180)
     static let lightSourceStartingDirection = -20.rads  // +/-.pi radians (0 right, positive clockwise)
     static let lightPropagationStepSize = 1.0
 }
 
+protocol PathProvider: UIView {
+    var path: UIBezierPath { get }
+}
+
 class BoardView: UIView {
 
-    let lightSourceView = LightSourceView()
     let triangleView = TriangleView()
+    let rectangleView = RectangleView()
+    let lightSourceView = LightSourceView()
 
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
         setupTriangleView()
+        setupRectangleView()
         setupLightSourceView()  // setup last, so it's on top
     }
     
@@ -43,6 +52,19 @@ class BoardView: UIView {
         triangleView.addGestureRecognizer(rotation)
     }
     
+    private func setupRectangleView() {
+        rectangleView.center = Constant.rectangleStartingCenter
+        rectangleView.bounds.size = CGSize(width: Constant.rectangleSize, height: Constant.rectangleSize)
+        rectangleView.backgroundColor = .clear
+        addSubview(rectangleView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        rectangleView.addGestureRecognizer(pan)
+        
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rectangleView.addGestureRecognizer(rotation)
+    }
+
     private func setupLightSourceView() {
         lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
         lightSourceView.center = Constant.lightSourceStartingCenter
@@ -66,7 +88,8 @@ class BoardView: UIView {
     private func drawLight() {
         let startingPoint = lightSourceView.outputPoint
         let startingDirection = lightSourceView.direction
-        guard !isInside(triangleView, point: startingPoint) else { return }  // might want to allow starting inside prism
+        guard !isInside(triangleView, point: startingPoint) &&
+                !isInside(rectangleView, point: startingPoint) else { return }  // might want to allow starting inside a prism
         
         // propagate separate light wavelengths/colors
         for wavelength in Constant.wavelengths {
@@ -85,7 +108,7 @@ class BoardView: UIView {
         light.move(to: point)
         
         // propagate light through air, until contacting prism (or off screen)
-        while !isInside(triangleView, point: point) && isOnScreen(point) {
+        while !isInside(triangleView, point: point) && !isInside(rectangleView, point: point) && isOnScreen(point) {  // pws: make more generic
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirections[mediumsTraversed]),
                              y: Constant.lightPropagationStepSize * sin(lightDirections[mediumsTraversed]))
             light.addLine(to: point)
@@ -94,15 +117,17 @@ class BoardView: UIView {
         guard isOnScreen(point) else { return }
 
         // bend light at prism interface
+        let prismView: PathProvider = isInside(triangleView, point: point) ? triangleView : rectangleView
         let lightDirectionPrism = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed],
                                                     point: point,
                                                     refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                    prismView: prismView,
                                                     isEnteringPrism: true)
         lightDirections.append(lightDirectionPrism)
         mediumsTraversed += 1
         
         // propagate light through prism, until contacting air (or off screen)
-        while isInside(triangleView, point: point) && isOnScreen(point) {
+        while isInside(triangleView, point: point) || isInside(rectangleView, point: point) && isOnScreen(point) {
             let lightDirection = lightDirections[mediumsTraversed]
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
                              y: Constant.lightPropagationStepSize * sin(lightDirection))
@@ -114,6 +139,7 @@ class BoardView: UIView {
         let lightDirectionAir = lightDirectionOut(lightDirectionIn: lightDirections[mediumsTraversed],
                                                   point: point,
                                                   refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                  prismView: prismView,
                                                   isEnteringPrism: false)
         lightDirections.append(lightDirectionAir)
         mediumsTraversed += 1
@@ -136,8 +162,8 @@ class BoardView: UIView {
     
     // MARK: - Utilities
     
-    private func isInside(_ triangleView: TriangleView, point: CGPoint) -> Bool {
-        triangleView.path.contains(convert(point, to: triangleView))
+    private func isInside(_ shapeView: PathProvider, point: CGPoint) -> Bool {
+        shapeView.path.contains(convert(point, to: shapeView))
     }
 
     private func isOnScreen(_ point: CGPoint) -> Bool {
@@ -145,21 +171,26 @@ class BoardView: UIView {
     }
     
     // light direction after crossing surface boundary
-    private func lightDirectionOut(lightDirectionIn: Double, point: CGPoint, refractiveIndexOfGlass: Double, isEnteringPrism: Bool) -> Double {
-        let surfaceNormalAngle = surfaceNormalAngleAtPoint(point)! + (isEnteringPrism ? 0 : .pi)  // normal to surface on incoming side
+    private func lightDirectionOut(lightDirectionIn: Double,
+                                   point: CGPoint,
+                                   refractiveIndexOfGlass: Double,
+                                   prismView: PathProvider,
+                                   isEnteringPrism: Bool) -> Double {
+        let surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView)! + (isEnteringPrism ? 0 : .pi)  // normal to surface on incoming side
 //        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
         let angleOfIncidence = surfaceNormalAngle - lightDirectionIn
         let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
         let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
         let lightDirectionOut = surfaceNormalAngle - angleOfRefraction
+//        print(String(format: "light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
         return lightDirectionOut
     }
 
-    // direction of surface normal pointing toward inside of triangleView;
+    // direction of surface normal pointing toward inside of prism;
     // +/-.pi radians (0 right, positive clockwise)
-    // found by checking a ring of points around input point, for points inside triangleView;
+    // found by checking a ring of points around input point, for points inside prism;
     // return the middle of all points inside (easier then averaging across any discontinuity in angles);
-    private func surfaceNormalAngleAtPoint(_ point: CGPoint) -> Double? {
+    private func surfaceNormalAngleAtPoint(_ point: CGPoint, on prismView: PathProvider) -> Double? {
         let radius = 4.0
         let numPoints = 360  // every degrees around circle
         let deltaAngle = 2 * .pi / Double(numPoints)
@@ -167,7 +198,7 @@ class BoardView: UIView {
         for i in 0..<numPoints {
             let angle = Double(i) * deltaAngle - .pi
             let testPoint = point + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
-            let isInside = triangleView.path.contains(convert(testPoint, to: triangleView))
+            let isInside = isInside(prismView, point: testPoint)
             isDirectionInsideTriangle.append(isInside)
         }
         // of all directions pointing into shape, return middle one (should be normal to surface)

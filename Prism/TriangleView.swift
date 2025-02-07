@@ -7,10 +7,10 @@
 
 import UIKit
 
-class TriangleView: UIView {
+class TriangleView: UIView, PathProvider {
 
     // create path before drawing, since superview's draw runs before subview's draw,
-    // and superview's draw uses path to determine which light points are inside triangle
+    // and superview's draw uses path to determine which light points are inside shape
     lazy var path: UIBezierPath = {
         let triangle = UIBezierPath()
         triangle.move(to: CGPoint(x: bounds.midX, y: 1))
