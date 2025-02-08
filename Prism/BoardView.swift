@@ -127,13 +127,18 @@ class BoardView: UIView {
             
             // bend light at prism interface
             prismView = prismContainingPoint(point)
-            let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                          point: point,
-                                                          refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                          prismView: prismView!,
-                                                          isEnteringPrism: true)
-            directions.append(lightDirectionInPrism)
-            mediumsTraversed += 1
+            if let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                             point: point,
+                                                             refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                             prismView: prismView!,
+                                                             isEnteringPrism: true) {
+                directions.append(lightDirectionInPrism)
+                mediumsTraversed += 1
+            } else {
+                // overlapping prisms
+                finishDrawingLight(light, color: color)
+                return
+            }
             
             // propagate light through prism, until contacting air (or off screen)
             guard propagateLightThroughPrism(prismView!,
@@ -141,15 +146,20 @@ class BoardView: UIView {
                                              direction: directions[mediumsTraversed],
                                              point: &point,
                                              color: color) else { return }
-
+            
             // bend light at air interface
-            let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                        point: point,
-                                                        refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                        prismView: prismView!,
-                                                        isEnteringPrism: false)
-            directions.append(lightDirectionInAir)
-            mediumsTraversed += 1
+            if let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                           point: point,
+                                                           refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                           prismView: prismView!,
+                                                           isEnteringPrism: false) {
+                directions.append(lightDirectionInAir)
+                mediumsTraversed += 1
+            } else {
+                // overlapping prisms
+                finishDrawingLight(light, color: color)
+                return
+            }
         }
         finishDrawingLight(light, color: color)
     }
@@ -212,15 +222,19 @@ class BoardView: UIView {
                                    point: CGPoint,
                                    refractiveIndexOfGlass: Double,
                                    prismView: PathProvider,
-                                   isEnteringPrism: Bool) -> Double {
-        let surfaceNormalAngle = (surfaceNormalAngleAtPoint(point, on: prismView)! + (isEnteringPrism ? 0 : .pi)).wrapPi  // normal to surface on incoming side
-//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
-        let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
-        let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
-        let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
-        let lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
-//        print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
-        return lightDirectionOut
+                                   isEnteringPrism: Bool) -> Double? {
+        if var surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView) {
+            surfaceNormalAngle = (surfaceNormalAngle + (isEnteringPrism ? 0 : .pi)).wrapPi
+//            drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
+            let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
+            let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
+            let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
+            let lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+//            print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
+            return lightDirectionOut
+        } else {
+            return nil
+        }
     }
 
     // direction of surface normal pointing toward inside of prism;
