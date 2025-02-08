@@ -8,6 +8,8 @@
 import UIKit
 
 class TriangleView: UIView, PathProvider {
+    
+    let id = UUID()
 
     // create path before drawing, since superview's draw runs before subview's draw,
     // and superview's draw uses path to determine which light points are inside shape

@@ -13,6 +13,8 @@ struct RectangleConst {
 
 class RectangleView: UIView, PathProvider {
 
+    let id = UUID()
+
     lazy var width = RectangleConst.widthPercent * bounds.width
     lazy var height = bounds.height
 

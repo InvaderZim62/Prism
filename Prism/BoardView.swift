@@ -19,7 +19,14 @@ struct Constant {
 }
 
 protocol PathProvider: UIView {
+    var id: UUID { get }
     var path: UIBezierPath { get }
+}
+
+extension PathProvider {
+    func isEqual(to rhs: some PathProvider) -> Bool {
+        id == rhs.id
+    }
 }
 
 class BoardView: UIView {
@@ -104,33 +111,42 @@ class BoardView: UIView {
         var point = startingPoint
         var directions = [startingDirection]  // keep separate directions for each medium
         var mediumsTraversed = 0
+        var prismView: PathProvider?
         
         let light = UIBezierPath()
         light.move(to: point)
         
         for _ in 0..<prismViews.count + 1 {
             
-            // propagate light through air, until contacting prism (or off screen)
-            guard propagateLightThroughAir(light: light, direction: directions[mediumsTraversed], point: &point, color: color) else { return }
+            // propagate light through air, until contacting next prism (or off screen)
+            guard propagateLightThroughAir(previousPrismView: prismView,
+                                           light: light,
+                                           direction: directions[mediumsTraversed],
+                                           point: &point,
+                                           color: color) else { return }
             
             // bend light at prism interface
-            let prismView = prismContainingPoint(point)!
+            prismView = prismContainingPoint(point)
             let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
                                                           point: point,
                                                           refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                          prismView: prismView,
+                                                          prismView: prismView!,
                                                           isEnteringPrism: true)
             directions.append(lightDirectionInPrism)
             mediumsTraversed += 1
             
             // propagate light through prism, until contacting air (or off screen)
-            guard propagateLightThroughPrism(prismView, light: light, direction: directions[mediumsTraversed], point: &point, color: color) else { return }
+            guard propagateLightThroughPrism(prismView!,
+                                             light: light,
+                                             direction: directions[mediumsTraversed],
+                                             point: &point,
+                                             color: color) else { return }
 
             // bend light at air interface
             let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
                                                         point: point,
                                                         refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                        prismView: prismView,
+                                                        prismView: prismView!,
                                                         isEnteringPrism: false)
             directions.append(lightDirectionInAir)
             mediumsTraversed += 1
@@ -138,7 +154,8 @@ class BoardView: UIView {
         finishDrawingLight(light, color: color)
     }
     
-    private func propagateLightThroughAir(light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+    private func propagateLightThroughAir(previousPrismView: PathProvider?, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+        let previousPrismView = previousPrismView ?? TriangleView()
         repeat {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
                              y: Constant.lightPropagationStepSize * sin(direction))
@@ -147,7 +164,7 @@ class BoardView: UIView {
                 finishDrawingLight(light, color: color)
                 return false
             }
-        } while prismContainingPoint(point) == nil
+        } while prismContainingPoint(point) == nil || prismContainingPoint(point)!.isEqual(to: previousPrismView)
         return true
     }
 
@@ -196,14 +213,13 @@ class BoardView: UIView {
                                    refractiveIndexOfGlass: Double,
                                    prismView: PathProvider,
                                    isEnteringPrism: Bool) -> Double {
-        let surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView)! + (isEnteringPrism ? 0 : .pi)  // normal to surface on incoming side
+        let surfaceNormalAngle = (surfaceNormalAngleAtPoint(point, on: prismView)! + (isEnteringPrism ? 0 : .pi)).wrapPi  // normal to surface on incoming side
 //        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
-        let angleOfIncidence = surfaceNormalAngle - lightDirectionIn
+        let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
         let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
         let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
-        let lightDirectionOut = surfaceNormalAngle - angleOfRefraction
-//        print(String(format: "light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f",
-//                     lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
+        let lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+//        print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
         return lightDirectionOut
     }
 
