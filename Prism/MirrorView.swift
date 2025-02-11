@@ -1,27 +1,31 @@
 //
-//  RectangleView.swift
+//  MirrorView.swift
 //  Prism
 //
-//  Created by Phil Stern on 2/6/25.
+//  Created by Phil Stern on 2/10/25.
 //
 
 import UIKit
 
-struct RectangleConst {
-    static let widthPercent = 1.0  // percent bounds.width (set lower for narrower prism)
+struct MirrorConst {
+    static let widthPercent = 0.1  // percent bounds.width
 }
 
-class RectangleView: UIView, PathProvider {
+class MirrorView: UIView, PathProvider {
 
     let id = UUID()
-
-    lazy var width = RectangleConst.widthPercent * bounds.width
+    
+    lazy var width = MirrorConst.widthPercent * bounds.width
     lazy var height = bounds.height
+    
+    var direction: Double {
+        atan2(self.transform.b, self.transform.a)
+    }
 
     // create path before drawing, since superview's draw runs before subview's draw,
     // and superview's draw uses path to determine which light points are inside shape
     lazy var path: UIBezierPath = {
-        let rectangle = UIBezierPath(roundedRect: CGRect(x: (1 - RectangleConst.widthPercent) / 2 * bounds.width + 1.0,
+        let rectangle = UIBezierPath(roundedRect: CGRect(x: (1 - MirrorConst.widthPercent) / 2 * bounds.width + 1.0,
                                                          y: 1,
                                                          width: width - 2,
                                                          height: height - 2),
@@ -30,8 +34,10 @@ class RectangleView: UIView, PathProvider {
     }()
     
     override func draw(_ rect: CGRect) {
-        path.lineWidth = 1
-        UIColor.cyan.setStroke()
+        path.lineWidth = 2
+        UIColor.lightGray.setStroke()
         path.stroke()
+        UIColor.black.setFill()
+        path.fill()
     }
 }

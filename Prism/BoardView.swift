@@ -11,8 +11,8 @@ struct Constant {
     static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)
 //    static let wavelengths = [500.0]  // green light
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
-    static let triangleSideLength = 140.0
-    static let rectangleSize = 120.0
+    static let triangleBaseLength = 140.0
+    static let rectangleSize = 120.0  // also used for mirror
     static let refractiveIndexOfAir = 1.0
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
     static let lightPropagationStepSize = 1.0
@@ -37,15 +37,16 @@ class BoardView: UIView {
     required init?(coder: NSCoder) {  // called for views added through Interface Builder
         super.init(coder: coder)
         addTriangleView(center: CGPoint(x: 193, y: 102), rotation: 0)
-        addTriangleView(center: CGPoint(x: 330, y: 184), rotation: 180.rads)
-        addRectangleView(center: CGPoint(x: 424, y: 261), rotation: 0)
+        addTriangleView(center: CGPoint(x: 221, y: 297), rotation: 180.rads)
+        addRectangleView(center: CGPoint(x: 393, y: 261), rotation: 0)
+        addMirrorView(center: CGPoint(x: 562, y: 209), rotation: 0)
         addLightSourceView(center: CGPoint(x: 69, y: 124), rotation: -20.rads)  // setup last, so it's on top
     }
     
     private func addTriangleView(center: CGPoint, rotation: Double) {
         let triangleView = TriangleView()
         triangleView.center = center
-        triangleView.bounds.size = CGSize(width: Constant.triangleSideLength, height: Constant.triangleSideLength * sin(60.rads))
+        triangleView.bounds.size = CGSize(width: Constant.triangleBaseLength, height: Constant.triangleBaseLength * sin(60.rads))
         triangleView.transform = triangleView.transform.rotated(by: rotation)
         triangleView.backgroundColor = .clear
         prismViews.append(triangleView)
@@ -87,6 +88,22 @@ class BoardView: UIView {
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
         lightSourceView.addGestureRecognizer(rotation)
     }
+    
+    private func addMirrorView(center: CGPoint, rotation: Double) {
+        let mirrorView = MirrorView()
+        mirrorView.center = center
+        mirrorView.bounds.size = CGSize(width: Constant.rectangleSize, height: Constant.rectangleSize)
+        mirrorView.transform = mirrorView.transform.rotated(by: rotation)
+        mirrorView.backgroundColor = .clear
+        prismViews.append(mirrorView)
+        addSubview(mirrorView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        mirrorView.addGestureRecognizer(pan)
+        
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        mirrorView.addGestureRecognizer(rotation)
+    }
 
     // MARK: - Draw
     
@@ -116,7 +133,7 @@ class BoardView: UIView {
         let light = UIBezierPath()
         light.move(to: point)
         
-        for _ in 0..<prismViews.count + 1 {
+        for _ in 0..<2 * prismViews.count {  // allow for light to traverse through all prisms twice
             
             // propagate light through air, until contacting next prism (or off screen)
             guard propagateLightThroughAir(previousPrismView: prismView,
@@ -124,41 +141,48 @@ class BoardView: UIView {
                                            direction: directions[mediumsTraversed],
                                            point: &point,
                                            color: color) else { return }
-            
-            // bend light at prism interface
             prismView = prismContainingPoint(point)
-            if let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                             point: point,
-                                                             refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                             prismView: prismView!,
-                                                             isEnteringPrism: true) {
-                directions.append(lightDirectionInPrism)
+            
+            if let mirrorView = prismView as? MirrorView {
+                // reflect off mirror
+                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * mirrorView.direction
+                directions.append(reflectedDirection)
                 mediumsTraversed += 1
             } else {
-                // overlapping prisms
-                finishDrawingLight(light, color: color)
-                return
-            }
-            
-            // propagate light through prism, until contacting air (or off screen)
-            guard propagateLightThroughPrism(prismView!,
-                                             light: light,
-                                             direction: directions[mediumsTraversed],
-                                             point: &point,
-                                             color: color) else { return }
-            
-            // bend light at air interface
-            if let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                           point: point,
-                                                           refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                           prismView: prismView!,
-                                                           isEnteringPrism: false) {
-                directions.append(lightDirectionInAir)
-                mediumsTraversed += 1
-            } else {
-                // overlapping prisms
-                finishDrawingLight(light, color: color)
-                return
+                // bend light at prism interface
+                if let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                                 point: point,
+                                                                 refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                                 prismView: prismView!,
+                                                                 isEnteringPrism: true) {
+                    directions.append(lightDirectionInPrism)
+                    mediumsTraversed += 1
+                } else {
+                    // overlapping prisms
+                    finishDrawingLight(light, color: color)
+                    return
+                }
+                
+                // propagate light through prism, until contacting air (or off screen)
+                guard propagateLightThroughPrism(prismView!,
+                                                 light: light,
+                                                 direction: directions[mediumsTraversed],
+                                                 point: &point,
+                                                 color: color) else { return }
+                
+                // bend light at air interface
+                if let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                               point: point,
+                                                               refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                               prismView: prismView!,
+                                                               isEnteringPrism: false) {
+                    directions.append(lightDirectionInAir)
+                    mediumsTraversed += 1
+                } else {
+                    // overlapping prisms
+                    finishDrawingLight(light, color: color)
+                    return
+                }
             }
         }
         finishDrawingLight(light, color: color)
@@ -337,6 +361,7 @@ class BoardView: UIView {
         if let pannedView = recognizer.view {
             let translation = recognizer.translation(in: self)
             pannedView.center += translation
+            print(pannedView.center)
             recognizer.setTranslation(.zero, in: self)
             setNeedsDisplay()
         }
