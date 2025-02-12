@@ -4,6 +4,11 @@
 //
 //  Created by Phil Stern on 2/1/25.
 //
+//  To allow simultaneous pan and rotate gestures:
+//  - add UIGestureRecognizerDelegate to class definition
+//  - set gesture delegates to self
+//  - add func gestureRecognizer(shouldRecognizeSimultaneouslyWith:)
+//
 
 import UIKit
 
@@ -29,7 +34,7 @@ extension PathProvider {
     }
 }
 
-class BoardView: UIView {
+class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
 
     var prismViews = [PathProvider]()
     let lightSourceView = LightSourceView()
@@ -53,9 +58,11 @@ class BoardView: UIView {
         addSubview(triangleView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
         triangleView.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self
         triangleView.addGestureRecognizer(rotation)
     }
     
@@ -69,9 +76,11 @@ class BoardView: UIView {
         addSubview(rectangleView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
         rectangleView.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self
         rectangleView.addGestureRecognizer(rotation)
     }
 
@@ -83,9 +92,11 @@ class BoardView: UIView {
         addSubview(lightSourceView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
         lightSourceView.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self
         lightSourceView.addGestureRecognizer(rotation)
     }
     
@@ -99,9 +110,11 @@ class BoardView: UIView {
         addSubview(mirrorView)
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
         mirrorView.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self
         mirrorView.addGestureRecognizer(rotation)
     }
 
@@ -243,7 +256,7 @@ class BoardView: UIView {
     
     // light direction after crossing surface boundary, based on Snell's law;
     // at point where light exiting prism is parallel to surface, it reflects inward;
-    // light then follows a straight line out of prism in calling function (refraction
+    // it then follows a straight line out of prism in calling function (refraction
     // when finally exiting prism not currently modeled)
     private func lightDirectionOut(lightDirectionIn: Double,
                                    point: CGPoint,
@@ -384,13 +397,24 @@ class BoardView: UIView {
     }
     
     // to allow simultaneous rotate and pan gestures,
-    // see Color app, which uses simultaneous pinch and pan gestures
+    // see Colors app, which uses simultaneous pinch and pan gestures
     @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
         if let rotatedView = recognizer.view {
             let rotation = recognizer.rotation
             rotatedView.transform = rotatedView.transform.rotated(by: rotation)
             recognizer.rotation = 0  // reset, to use incremental rotations
             setNeedsDisplay()
+        }
+    }
+    
+    // MARK: - UIGestureRecognizerDelegate
+    
+    // allow simultaneous pan and rotate gestures
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer is UIPanGestureRecognizer || gestureRecognizer is UIRotationGestureRecognizer {
+            return true
+        } else {
+            return false
         }
     }
 }
