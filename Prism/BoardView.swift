@@ -241,7 +241,10 @@ class BoardView: UIView {
         !frame.contains(point)
     }
     
-    // light direction after crossing surface boundary
+    // light direction after crossing surface boundary, based on Snell's law;
+    // at point where light exiting prism is parallel to surface, it reflects inward;
+    // light then follows a straight line out of prism in calling function (refraction
+    // when finally exiting prism not currently modeled)
     private func lightDirectionOut(lightDirectionIn: Double,
                                    point: CGPoint,
                                    refractiveIndexOfGlass: Double,
@@ -252,9 +255,22 @@ class BoardView: UIView {
 //            drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
             let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
             let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
-            let angleOfRefraction = asin((refractionRatio * sin(angleOfIncidence)).limitedBetween(-1, and: 1))
-            let lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
-//            print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
+            let sinAngleOfRefraction = refractionRatio * sin(angleOfIncidence)
+            let lightDirectionOut: Double
+            if isEnteringPrism {
+                let angleOfRefraction = asin(sinAngleOfRefraction)
+                lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+            } else {
+                if sinAngleOfRefraction >= -1 && sinAngleOfRefraction <= 1 {
+                    // refraction through surface (exiting prism)
+                    let angleOfRefraction = asin(sinAngleOfRefraction)
+                    lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+//                    print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
+                } else {
+                    // reflection at surface (staying in prism)
+                    lightDirectionOut = .pi - lightDirectionIn + 2 * surfaceNormalAngle
+                }
+            }
             return lightDirectionOut
         } else {
             return nil
@@ -263,16 +279,17 @@ class BoardView: UIView {
 
     // direction of surface normal pointing toward inside of prism;
     // +/-.pi radians (0 right, positive clockwise)
-    // found by checking a ring of points around input point, for points inside prism;
-    // return the middle of all points inside (easier then averaging across any discontinuity in angles);
-    private func surfaceNormalAngleAtPoint(_ point: CGPoint, on prismView: PathProvider) -> Double? {
+    // found by checking a ring of test points around the surface point; half the test points should
+    // be inside the prism and half outside; return the direction of the middle of points inside; this
+    // method avoids averaging across any discontinuities in the test angles (ie. +/- pi wrap-around);
+    private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PathProvider) -> Double? {
         let radius = 4.0
         let numPoints = 360  // every degrees around circle
         let deltaAngle = 2 * .pi / Double(numPoints)
         var isDirectionInsideTriangle = [Bool]()
         for i in 0..<numPoints {
             let angle = Double(i) * deltaAngle - .pi
-            let testPoint = point + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
+            let testPoint = surfacePoint + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
             let isInside = isInside(prismView, point: testPoint)
             isDirectionInsideTriangle.append(isInside)
         }
