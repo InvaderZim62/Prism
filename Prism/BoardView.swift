@@ -39,35 +39,39 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     var prismViews = [PathProvider]()
     let lightSourceView = LightSourceView()
 
-    required init?(coder: NSCoder) {  // called for views added through Interface Builder
+    required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
         super.init(coder: coder)
-        addTriangleView(center: CGPoint(x: 193, y: 102), rotation: 0)
-        addTriangleView(center: CGPoint(x: 221, y: 297), rotation: 180.rads)
-        addRectangleView(center: CGPoint(x: 393, y: 261), rotation: 0)
-        addMirrorView(center: CGPoint(x: 562, y: 209), rotation: 0)
+        addPrismView(TriangleView(),
+                     center: CGPoint(x: 193, y: 102),
+                     width: Constant.triangleBaseLength,
+                     height: Constant.triangleBaseLength * sin(60.rads),
+                     rotation: 0)
+        addPrismView(TriangleView(),
+                     center: CGPoint(x: 221, y: 297),
+                     width: Constant.triangleBaseLength,
+                     height: Constant.triangleBaseLength * sin(60.rads),
+                     rotation: 180.rads)
+        addPrismView(RectangleView(),
+                     center: CGPoint(x: 393, y: 261),
+                     width: Constant.rectangleSize,
+                     height: Constant.rectangleSize,
+                     rotation: 0)
+        addPrismView(MirrorView(),
+                     center: CGPoint(x: 562, y: 209),
+                     width: Constant.rectangleSize,
+                     height: Constant.rectangleSize,
+                     rotation: 0)
         addLightSourceView(center: CGPoint(x: 69, y: 124), rotation: -20.rads)  // setup last, so it's on top
     }
     
-    private func addTriangleView(center: CGPoint, rotation: Double) {
-        let triangleView = TriangleView()
-        triangleView.center = center
-        triangleView.bounds.size = CGSize(width: Constant.triangleBaseLength, height: Constant.triangleBaseLength * sin(60.rads))
-        triangleView.transform = triangleView.transform.rotated(by: rotation)
-        triangleView.backgroundColor = .clear
-        prismViews.append(triangleView)
-        addSubview(triangleView)
-        addPanAndRotateGesturesTo(triangleView)
-    }
-    
-    private func addRectangleView(center: CGPoint, rotation: Double) {
-        let rectangleView = RectangleView()
-        rectangleView.center = center
-        rectangleView.bounds.size = CGSize(width: Constant.rectangleSize, height: Constant.rectangleSize)
-        rectangleView.transform = rectangleView.transform.rotated(by: rotation)
-        rectangleView.backgroundColor = .clear
-        prismViews.append(rectangleView)
-        addSubview(rectangleView)
-        addPanAndRotateGesturesTo(rectangleView)
+    private func addPrismView(_ prismView: PathProvider, center: CGPoint, width: Double, height: Double, rotation: Double) {
+        prismView.center = center
+        prismView.bounds.size = CGSize(width: width, height: height)
+        prismView.transform = prismView.transform.rotated(by: rotation)
+        prismView.backgroundColor = .clear
+        prismViews.append(prismView)
+        addSubview(prismView)
+        addPanAndRotateGesturesTo(prismView)
     }
 
     private func addLightSourceView(center: CGPoint, rotation: Double) {
@@ -77,17 +81,6 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         lightSourceView.backgroundColor = .clear
         addSubview(lightSourceView)
         addPanAndRotateGesturesTo(lightSourceView)
-    }
-    
-    private func addMirrorView(center: CGPoint, rotation: Double) {
-        let mirrorView = MirrorView()
-        mirrorView.center = center
-        mirrorView.bounds.size = CGSize(width: Constant.rectangleSize, height: Constant.rectangleSize)
-        mirrorView.transform = mirrorView.transform.rotated(by: rotation)
-        mirrorView.backgroundColor = .clear
-        prismViews.append(mirrorView)
-        addSubview(mirrorView)
-        addPanAndRotateGesturesTo(mirrorView)
     }
     
     private func addPanAndRotateGesturesTo(_ view: UIView) {
