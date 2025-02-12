@@ -56,14 +56,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         triangleView.backgroundColor = .clear
         prismViews.append(triangleView)
         addSubview(triangleView)
-        
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        triangleView.addGestureRecognizer(pan)
-        
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self
-        triangleView.addGestureRecognizer(rotation)
+        addPanAndRotateGesturesTo(triangleView)
     }
     
     private func addRectangleView(center: CGPoint, rotation: Double) {
@@ -74,14 +67,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         rectangleView.backgroundColor = .clear
         prismViews.append(rectangleView)
         addSubview(rectangleView)
-        
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        rectangleView.addGestureRecognizer(pan)
-        
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self
-        rectangleView.addGestureRecognizer(rotation)
+        addPanAndRotateGesturesTo(rectangleView)
     }
 
     private func addLightSourceView(center: CGPoint, rotation: Double) {
@@ -90,14 +76,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         lightSourceView.transform = lightSourceView.transform.rotated(by: rotation)
         lightSourceView.backgroundColor = .clear
         addSubview(lightSourceView)
-        
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        lightSourceView.addGestureRecognizer(pan)
-        
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self
-        lightSourceView.addGestureRecognizer(rotation)
+        addPanAndRotateGesturesTo(lightSourceView)
     }
     
     private func addMirrorView(center: CGPoint, rotation: Double) {
@@ -108,14 +87,17 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         mirrorView.backgroundColor = .clear
         prismViews.append(mirrorView)
         addSubview(mirrorView)
-        
+        addPanAndRotateGesturesTo(mirrorView)
+    }
+    
+    private func addPanAndRotateGesturesTo(_ view: UIView) {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         pan.delegate = self  // needed for gestureRecognizer, below
-        mirrorView.addGestureRecognizer(pan)
+        view.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
         rotation.delegate = self
-        mirrorView.addGestureRecognizer(rotation)
+        view.addGestureRecognizer(rotation)
     }
 
     // MARK: - Draw
