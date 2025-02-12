@@ -13,7 +13,7 @@
 import UIKit
 
 struct Constant {
-    static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)
+    static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)  // 29 wavelengths
 //    static let wavelengths = [500.0]  // green light
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
     static let triangleBaseLength = 140.0
@@ -36,7 +36,7 @@ extension PathProvider {
 
 class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
 
-    var prismViews = [PathProvider]()
+    var prismViews = [PathProvider]()  // including mirror
     let lightSourceView = LightSourceView()
 
     required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
@@ -69,9 +69,9 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         prismView.bounds.size = CGSize(width: width, height: height)
         prismView.transform = prismView.transform.rotated(by: rotation)
         prismView.backgroundColor = .clear
+        addPanAndRotateGesturesTo(prismView)
         prismViews.append(prismView)
         addSubview(prismView)
-        addPanAndRotateGesturesTo(prismView)
     }
 
     private func addLightSourceView(center: CGPoint, rotation: Double) {
@@ -79,8 +79,8 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         lightSourceView.center = center
         lightSourceView.transform = lightSourceView.transform.rotated(by: rotation)
         lightSourceView.backgroundColor = .clear
-        addSubview(lightSourceView)
         addPanAndRotateGesturesTo(lightSourceView)
+        addSubview(lightSourceView)
     }
     
     private func addPanAndRotateGesturesTo(_ view: UIView) {
@@ -89,7 +89,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         view.addGestureRecognizer(pan)
         
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self
+        rotation.delegate = self  // needed for gestureRecognizer, below
         view.addGestureRecognizer(rotation)
     }
 
