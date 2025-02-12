@@ -361,7 +361,6 @@ class BoardView: UIView {
         if let pannedView = recognizer.view {
             let translation = recognizer.translation(in: self)
             pannedView.center += translation
-            print(pannedView.center)
             recognizer.setTranslation(.zero, in: self)
             setNeedsDisplay()
         }
