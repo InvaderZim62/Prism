@@ -4,6 +4,10 @@
 //
 //  Created by Phil Stern on 2/13/25.
 //
+//  Precompute the angles to the vertices and surface normal directions. Return surface normal
+//  direction for a position around the prism, based on which which vertices a line to the
+//  position falls between.
+//
 
 import UIKit
 
@@ -56,7 +60,7 @@ class PrismView: UIView {
         return angles
     }()
     
-    // direction of surface normal pointing inside
+    // direction of surface normals pointing inside (one for each face)
     lazy var surfaceNormalDirections: [Double] = {
         var directions = [Double]()
         let closedVertices = [vertices.last!] + vertices
@@ -67,9 +71,9 @@ class PrismView: UIView {
         return directions
     }()
     
-    // create path before drawing, since superview's draw runs before subview's draw,
-    // and superview's draw uses path to determine which light points are inside shape
-    var path: UIBezierPath {
+    // stand-alone path variable used by superview's draw function to determine which light points are inside the prism
+    lazy var path: UIBezierPath = {
+        print(".", terminator: "")
         let shape = UIBezierPath()
         for index in vertices.indices {
             if index == 0 {
@@ -80,7 +84,7 @@ class PrismView: UIView {
         }
         shape.close()
         return shape
-    }
+    }()
     
     func directionOfSurfaceNormalAt(angle: Double) -> Double {
         for (index, vertexAngle) in anglesFromCenterToVertices.enumerated() {
