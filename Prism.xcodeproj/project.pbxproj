@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4A4EE69A2D5AAEE600D50F4B /* MirrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A4EE6992D5AAEE600D50F4B /* MirrorView.swift */; };
 		4A9473132D4F0DE70083E9BF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473092D4F0DE70083E9BF /* AppDelegate.swift */; };
 		4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94730C2D4F0DE70083E9BF /* SceneDelegate.swift */; };
 		4A9473152D4F0DE70083E9BF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473112D4F0DE70083E9BF /* ViewController.swift */; };
@@ -16,13 +15,11 @@
 		4A9473192D4F0DE70083E9BF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A9473102D4F0DE70083E9BF /* Main.storyboard */; };
 		4A94731D2D4F24A80083E9BF /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A94731C2D4F24A80083E9BF /* BoardView.swift */; };
 		4A9473212D501E4B0083E9BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473202D501E4B0083E9BF /* Extensions.swift */; };
-		4A9473232D5033AC0083E9BF /* TriangleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9473222D5033AC0083E9BF /* TriangleView.swift */; };
+		4A9647862D5EA74800346A34 /* PrismView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9647852D5EA74800346A34 /* PrismView.swift */; };
 		4AF8022F2D52B87900664B33 /* LightSourceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AF8022E2D52B87900664B33 /* LightSourceView.swift */; };
-		4AFD13B92D55510900B1981B /* RectangleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFD13B82D55510900B1981B /* RectangleView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4A4EE6992D5AAEE600D50F4B /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
 		4A9472F12D4F0DB50083E9BF /* Prism.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prism.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A9473092D4F0DE70083E9BF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4A94730A2D4F0DE70083E9BF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -33,9 +30,8 @@
 		4A9473112D4F0DE70083E9BF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		4A94731C2D4F24A80083E9BF /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		4A9473202D501E4B0083E9BF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		4A9473222D5033AC0083E9BF /* TriangleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TriangleView.swift; sourceTree = "<group>"; };
+		4A9647852D5EA74800346A34 /* PrismView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismView.swift; sourceTree = "<group>"; };
 		4AF8022E2D52B87900664B33 /* LightSourceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightSourceView.swift; sourceTree = "<group>"; };
-		4AFD13B82D55510900B1981B /* RectangleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,9 +79,7 @@
 				4A9473112D4F0DE70083E9BF /* ViewController.swift */,
 				4A94731C2D4F24A80083E9BF /* BoardView.swift */,
 				4AF8022E2D52B87900664B33 /* LightSourceView.swift */,
-				4A9473222D5033AC0083E9BF /* TriangleView.swift */,
-				4AFD13B82D55510900B1981B /* RectangleView.swift */,
-				4A4EE6992D5AAEE600D50F4B /* MirrorView.swift */,
+				4A9647852D5EA74800346A34 /* PrismView.swift */,
 				4A9473202D501E4B0083E9BF /* Extensions.swift */,
 				4A94730D2D4F0DE70083E9BF /* Supporting Files */,
 				4A94730E2D4F0DE70083E9BF /* Info.plist */,
@@ -168,13 +162,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A9473212D501E4B0083E9BF /* Extensions.swift in Sources */,
-				4A4EE69A2D5AAEE600D50F4B /* MirrorView.swift in Sources */,
 				4A9473132D4F0DE70083E9BF /* AppDelegate.swift in Sources */,
 				4AF8022F2D52B87900664B33 /* LightSourceView.swift in Sources */,
-				4A9473232D5033AC0083E9BF /* TriangleView.swift in Sources */,
 				4A94731D2D4F24A80083E9BF /* BoardView.swift in Sources */,
+				4A9647862D5EA74800346A34 /* PrismView.swift in Sources */,
 				4A9473142D4F0DE70083E9BF /* SceneDelegate.swift in Sources */,
-				4AFD13B92D55510900B1981B /* RectangleView.swift in Sources */,
 				4A9473152D4F0DE70083E9BF /* ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

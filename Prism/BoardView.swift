@@ -21,43 +21,33 @@ struct Constant {
     static let refractiveIndexOfAir = 1.0
     static let refractiveIndexOfGlass = 1.53  // (eventually make it a function of light wavelength)
     static let lightPropagationStepSize = 1.0
-}
-
-protocol PathProvider: UIView {
-    var id: UUID { get }
-    var path: UIBezierPath { get }
-    func directionOfSurfaceNormalAt(angle: Double) -> Double
-}
-
-extension PathProvider {
-    func isEqual(to rhs: some PathProvider) -> Bool {
-        id == rhs.id
-    }
+    static let rectangleWidthPercent = 1.0  // percent bounds.width (set lower for narrower prism)
+    static let mirrorWidthPercent = 0.1
 }
 
 class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
 
-    var prismViews = [PathProvider]()  // including mirror
+    var prismViews = [PrismView]()  // including mirror
     let lightSourceView = LightSourceView()
 
     required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
         super.init(coder: coder)
-        addPrismView(TriangleView(),
+        addPrismView(prismType: .triangle,
                      center: CGPoint(x: 193, y: 102),
                      width: Constant.triangleBaseLength,
                      height: Constant.triangleBaseLength * sin(60.rads),
                      rotation: 0)
-        addPrismView(TriangleView(),
+        addPrismView(prismType: .triangle,
                      center: CGPoint(x: 221, y: 297),
                      width: Constant.triangleBaseLength,
                      height: Constant.triangleBaseLength * sin(60.rads),
                      rotation: 180.rads)
-        addPrismView(RectangleView(),
+        addPrismView(prismType: .rectangle,
                      center: CGPoint(x: 393, y: 261),
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
                      rotation: 0)
-        addPrismView(MirrorView(),
+        addPrismView(prismType: .mirror,
                      center: CGPoint(x: 562, y: 209),
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
@@ -65,7 +55,9 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         addLightSourceView(center: CGPoint(x: 69, y: 124), rotation: -20.rads)  // setup last, so it's on top
     }
     
-    private func addPrismView(_ prismView: PathProvider, center: CGPoint, width: Double, height: Double, rotation: Double) {
+    private func addPrismView(prismType: PrismType, center: CGPoint, width: Double, height: Double, rotation: Double) {
+        let prismView = PrismView()
+        prismView.type = prismType
         prismView.center = center
         prismView.bounds.size = CGSize(width: width, height: height)
         prismView.transform = prismView.transform.rotated(by: rotation)
@@ -120,7 +112,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         var point = startingPoint
         var directions = [startingDirection]  // keep separate directions for each medium
         var mediumsTraversed = 0
-        var prismView: PathProvider?
+        var prismView: PrismView?
         
         let light = UIBezierPath()
         light.move(to: point)
@@ -135,9 +127,9 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                                            color: color) else { return }
             prismView = prismContainingPoint(point)
             
-            if let mirrorView = prismView as? MirrorView {
-                // reflect off mirror
-                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * mirrorView.rotation
+            if prismView!.type == .mirror {
+                // reflect light off mirror
+                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * prismView!.rotation
                 directions.append(reflectedDirection)
                 mediumsTraversed += 1
             } else {
@@ -180,8 +172,8 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         finishDrawingLight(light, color: color)
     }
     
-    private func propagateLightThroughAir(previousPrismView: PathProvider?, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
-        let previousPrismView = previousPrismView ?? TriangleView()
+    private func propagateLightThroughAir(previousPrismView: PrismView?, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+        let previousPrismView = previousPrismView ?? PrismView()
         repeat {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
                              y: Constant.lightPropagationStepSize * sin(direction))
@@ -190,11 +182,11 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 finishDrawingLight(light, color: color)
                 return false
             }
-        } while prismContainingPoint(point) == nil || prismContainingPoint(point)!.isEqual(to: previousPrismView)
+        } while prismContainingPoint(point) == nil || prismContainingPoint(point)! == previousPrismView
         return true
     }
 
-    private func propagateLightThroughPrism(_ prismView: PathProvider, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+    private func propagateLightThroughPrism(_ prismView: PrismView, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
         repeat {
             let lightDirection = direction
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
@@ -216,7 +208,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     
     // MARK: - Utilities
     
-    private func prismContainingPoint(_ point: CGPoint) -> PathProvider? {
+    private func prismContainingPoint(_ point: CGPoint) -> PrismView? {
         for prismView in prismViews {
             if prismView.path.contains(convert(point, to: prismView)) {
                 return prismView
@@ -225,8 +217,8 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         return nil
     }
 
-    private func isInside(_ shapeView: PathProvider, point: CGPoint) -> Bool {
-        shapeView.path.contains(convert(point, to: shapeView))
+    private func isInside(_ prismView: PrismView, point: CGPoint) -> Bool {
+        prismView.path.contains(convert(point, to: prismView))
     }
 
     private func isOffScreen(_ point: CGPoint) -> Bool {
@@ -240,7 +232,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     private func lightDirectionOut(lightDirectionIn: Double,
                                    point: CGPoint,
                                    refractiveIndexOfGlass: Double,
-                                   prismView: PathProvider,
+                                   prismView: PrismView,
                                    isEnteringPrism: Bool) -> Double? {
         if var surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView) {
             surfaceNormalAngle = (surfaceNormalAngle + (isEnteringPrism ? 0 : .pi)).wrapPi
@@ -271,7 +263,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     
     // direction of surface normal pointing toward inside of prism;
     // +/-.pi radians (0 right, positive clockwise)
-    private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PathProvider) -> Double? {
+    private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PrismView) -> Double? {
         let angleFromCenterToPoint = atan2(surfacePoint.y - prismView.center.y, surfacePoint.x - prismView.center.x)
         return prismView.directionOfSurfaceNormalAt(angle: angleFromCenterToPoint)
     }
@@ -351,10 +343,6 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
         if let pannedView = recognizer.view {
-//            if let triangleView = pannedView as? TriangleView {
-//                let temp = triangleView.directionOfSurfaceNormalAt(angle: 359.rads)
-//                print(temp.degs)
-//            }
             let translation = recognizer.translation(in: self)
             pannedView.center += translation
             recognizer.setTranslation(.zero, in: self)

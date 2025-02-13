@@ -1,29 +1,48 @@
 //
-//  RectangleView.swift
+//  PrismView.swift
 //  Prism
 //
-//  Created by Phil Stern on 2/6/25.
+//  Created by Phil Stern on 2/13/25.
 //
 
 import UIKit
 
-struct RectangleConst {
-    static let widthPercent = 1.0  // percent bounds.width (set lower for narrower prism)
+enum PrismType {
+    case triangle, rectangle, mirror
 }
 
-class RectangleView: UIView, PathProvider {
+class PrismView: UIView {
     
     let id = UUID()
+    var type = PrismType.triangle  // default
     
     var rotation: Double {
         atan2(self.transform.b, self.transform.a)
     }
+    
+    static func ==(lhs: PrismView, rhs: PrismView) -> Bool {
+        lhs.id == rhs.id
+    }
 
     // specify points clockwise starting from right of center
-    lazy var vertices = [CGPoint(x: (1 + RectangleConst.widthPercent) / 2 * bounds.width - 1, y: bounds.height - 1),
-                         CGPoint(x: (1 - RectangleConst.widthPercent) / 2 * bounds.width + 1, y: bounds.height - 1),
-                         CGPoint(x: (1 - RectangleConst.widthPercent) / 2 * bounds.width + 1, y: 1),
-                         CGPoint(x: (1 + RectangleConst.widthPercent) / 2 * bounds.width - 1, y: 1)]
+    lazy var vertices: [CGPoint] = {
+        switch type {
+        case .triangle:
+            return [CGPoint(x: bounds.width - 1, y: bounds.height - 1),
+                    CGPoint(x: 1, y: bounds.height - 1),
+                    CGPoint(x: bounds.midX, y: 1)]
+        case .rectangle:
+            return [CGPoint(x: (1 + Constant.rectangleWidthPercent) / 2 * bounds.width - 1, y: bounds.height - 1),
+                    CGPoint(x: (1 - Constant.rectangleWidthPercent) / 2 * bounds.width + 1, y: bounds.height - 1),
+                    CGPoint(x: (1 - Constant.rectangleWidthPercent) / 2 * bounds.width + 1, y: 1),
+                    CGPoint(x: (1 + Constant.rectangleWidthPercent) / 2 * bounds.width - 1, y: 1)]
+        case .mirror:
+            return [CGPoint(x: (1 + Constant.mirrorWidthPercent) / 2 * bounds.width - 1, y: bounds.height - 1),
+                    CGPoint(x: (1 - Constant.mirrorWidthPercent) / 2 * bounds.width + 1, y: bounds.height - 1),
+                    CGPoint(x: (1 - Constant.mirrorWidthPercent) / 2 * bounds.width + 1, y: 1),
+                    CGPoint(x: (1 + Constant.mirrorWidthPercent) / 2 * bounds.width - 1, y: 1)]
+        }
+    }()
     
     lazy var viewCenter = CGPoint(x: bounds.midX, y: bounds.midY)
     
@@ -72,10 +91,19 @@ class RectangleView: UIView, PathProvider {
         }
         return (surfaceNormalDirections[0] + rotation).wrapPi
     }
-
+    
     override func draw(_ rect: CGRect) {
-        path.lineWidth = 1
-        UIColor.cyan.setStroke()
-        path.stroke()
+        switch type {
+        case .mirror:
+            path.lineWidth = 2
+            UIColor.lightGray.setStroke()
+            path.stroke()
+            UIColor.black.setFill()
+            path.fill()
+        default:
+            path.lineWidth = 1
+            UIColor.cyan.setStroke()
+            path.stroke()
+        }
     }
 }
