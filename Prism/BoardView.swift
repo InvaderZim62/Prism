@@ -26,6 +26,7 @@ struct Constant {
 protocol PathProvider: UIView {
     var id: UUID { get }
     var path: UIBezierPath { get }
+    func directionOfSurfaceNormalAt(angle: Double) -> Double
 }
 
 extension PathProvider {
@@ -102,7 +103,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     private func drawLight() {
         let startingPoint = lightSourceView.outputPoint
         let startingDirection = lightSourceView.direction
-        guard prismContainingPoint(startingPoint) == nil else { return }  // can't start inside a prism
+        guard prismContainingPoint(startingPoint) == nil else { return }  // don't start inside a prism
         
         // propagate separate light wavelengths/colors
         for wavelength in Constant.wavelengths {
@@ -114,7 +115,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     
     private func propagateLightWith(wavelength: Double, startingPoint: CGPoint, startingDirection: Double) {
         var color = colorForWavelength(wavelength)
-        if wavelength == 585 { color = .white }  // special value, close to yellow
+        if wavelength == 585 { color = .white }  // magic number, close to yellow
         let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
         var point = startingPoint
         var directions = [startingDirection]  // keep separate directions for each medium
@@ -136,7 +137,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
             
             if let mirrorView = prismView as? MirrorView {
                 // reflect off mirror
-                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * mirrorView.direction
+                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * mirrorView.rotation
                 directions.append(reflectedDirection)
                 mediumsTraversed += 1
             } else {
@@ -267,29 +268,12 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
             return nil
         }
     }
-
+    
     // direction of surface normal pointing toward inside of prism;
     // +/-.pi radians (0 right, positive clockwise)
-    // found by checking a ring of test points around the surface point; half the test points should
-    // be inside the prism and half outside; return the direction of the middle of points inside; this
-    // method avoids averaging across any discontinuities in the test angles (ie. +/- pi wrap-around);
     private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PathProvider) -> Double? {
-        let radius = 4.0
-        let numPoints = 360  // every degrees around circle
-        let deltaAngle = 2 * .pi / Double(numPoints)
-        var isDirectionInsideTriangle = [Bool]()
-        for i in 0..<numPoints {
-            let angle = Double(i) * deltaAngle - .pi
-            let testPoint = surfacePoint + CGPoint(x: radius * cos(angle), y: radius * sin(angle))
-            let isInside = isInside(prismView, point: testPoint)
-            isDirectionInsideTriangle.append(isInside)
-        }
-        // of all directions pointing into shape, return middle one (should be normal to surface)
-        if let middleIndex = isDirectionInsideTriangle.indexOfMiddleTrue {
-            return Double(middleIndex) * deltaAngle - .pi
-        } else {
-            return nil
-        }
+        let angleFromCenterToPoint = atan2(surfacePoint.y - prismView.center.y, surfacePoint.x - prismView.center.x)
+        return prismView.directionOfSurfaceNormalAt(angle: angleFromCenterToPoint)
     }
 
     private func drawVectorAt(_ point: CGPoint, inDirection direction: Double, color: UIColor) {
@@ -367,6 +351,10 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
         if let pannedView = recognizer.view {
+//            if let triangleView = pannedView as? TriangleView {
+//                let temp = triangleView.directionOfSurfaceNormalAt(angle: 359.rads)
+//                print(temp.degs)
+//            }
             let translation = recognizer.translation(in: self)
             pannedView.center += translation
             recognizer.setTranslation(.zero, in: self)

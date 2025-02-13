@@ -30,13 +30,24 @@ extension Double {
         self * 180 / .pi
     }
 
-    // converts angle from +/-2 pi to +/-pi
+    // converts angle to +/-pi
     var wrapPi: Double {
         var wrappedAngle = self
-        if self > Double.pi {
-            wrappedAngle -= 2 * Double.pi
-        } else if self < -Double.pi {
-            wrappedAngle += 2 * Double.pi
+        if self > .pi {
+            wrappedAngle -= 2 * .pi
+        } else if self < -.pi {
+            wrappedAngle += 2 * .pi
+        }
+        return wrappedAngle
+    }
+    
+    // converts angle to 0 -> 2pi
+    var wrap2Pi: Double {
+        var wrappedAngle = self
+        if self >= 2 * .pi {
+            wrappedAngle -= 2 * .pi
+        } else if self < 0 {
+            wrappedAngle += 2 * .pi
         }
         return wrappedAngle
     }
@@ -46,6 +57,36 @@ extension CGFloat {
     mutating func limitBetween(_ minVal: CGFloat, and maxVal: CGFloat) {
         assert(minVal <= maxVal, "First argument must be less than second argument in call to limitBetween")
         self = Swift.min(Swift.max(self, minVal), maxVal)
+    }
+    
+    var rads: CGFloat {
+        self * .pi / 180
+    }
+    
+    var degs: CGFloat {
+        self * 180 / .pi
+    }
+
+    // converts angle to +/-pi
+    var wrapPi: CGFloat {
+        var wrappedAngle = self
+        if self > .pi {
+            wrappedAngle -= 2 * .pi
+        } else if self < -.pi {
+            wrappedAngle += 2 * .pi
+        }
+        return wrappedAngle
+    }
+    
+    // converts angle to 0 -> 2pi
+    var wrap2Pi: CGFloat {
+        var wrappedAngle = self
+        if self >= 2 * .pi {
+            wrappedAngle -= 2 * .pi
+        } else if self < 0 {
+            wrappedAngle += 2 * .pi
+        }
+        return wrappedAngle
     }
 }
 
