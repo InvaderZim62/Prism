@@ -112,7 +112,6 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         var point = startingPoint
         var directions = [startingDirection]  // keep separate directions for each medium
         var mediumsTraversed = 0
-        var prismView: PrismView?
         
         let light = UIBezierPath()
         light.move(to: point)
@@ -120,16 +119,16 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         for _ in 0..<2 * prismViews.count {  // allow for light to traverse through all prisms twice
             
             // propagate light through air, until contacting next prism (or off screen)
-            guard propagateLightThroughAir(previousPrismView: prismView,
-                                           light: light,
+            guard propagateLightThroughAir(light: light,
                                            direction: directions[mediumsTraversed],
                                            point: &point,
                                            color: color) else { return }
-            prismView = prismContainingPoint(point)
             
-            if prismView!.type == .mirror {
+            guard let prismView = prismContainingPoint(point) else { return }
+            
+            if prismView.type == .mirror {
                 // reflect light off mirror
-                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * prismView!.rotation
+                let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * prismView.rotation
                 directions.append(reflectedDirection)
                 mediumsTraversed += 1
             } else {
@@ -137,7 +136,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 if let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
                                                                  point: point,
                                                                  refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                                 prismView: prismView!,
+                                                                 prismView: prismView,
                                                                  isEnteringPrism: true) {
                     directions.append(lightDirectionInPrism)
                     mediumsTraversed += 1
@@ -148,7 +147,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 }
                 
                 // propagate light through prism, until contacting air (or off screen)
-                guard propagateLightThroughPrism(prismView!,
+                guard propagateLightThroughPrism(prismView,
                                                  light: light,
                                                  direction: directions[mediumsTraversed],
                                                  point: &point,
@@ -158,7 +157,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 if let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
                                                                point: point,
                                                                refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                               prismView: prismView!,
+                                                               prismView: prismView,
                                                                isEnteringPrism: false) {
                     directions.append(lightDirectionInAir)
                     mediumsTraversed += 1
@@ -172,8 +171,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         finishDrawingLight(light, color: color)
     }
     
-    private func propagateLightThroughAir(previousPrismView: PrismView?, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
-        let previousPrismView = previousPrismView ?? PrismView()
+    private func propagateLightThroughAir(light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
         repeat {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
                              y: Constant.lightPropagationStepSize * sin(direction))
@@ -182,7 +180,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 finishDrawingLight(light, color: color)
                 return false
             }
-        } while prismContainingPoint(point) == nil || prismContainingPoint(point)! == previousPrismView
+        } while prismContainingPoint(point) == nil
         return true
     }
 
