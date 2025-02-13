@@ -73,7 +73,6 @@ class PrismView: UIView {
     
     // stand-alone path variable used by superview's draw function to determine which light points are inside the prism
     lazy var path: UIBezierPath = {
-        print(".", terminator: "")
         let shape = UIBezierPath()
         for index in vertices.indices {
             if index == 0 {

@@ -13,7 +13,7 @@
 import UIKit
 
 struct Constant {
-    static let wavelengths = stride(from: 400.0, through: 680.0, by: 10.0)  // 29 wavelengths
+    static let wavelengths = stride(from: 400.0, through: 680.0, by: 7.0)  // 41 wavelengths
 //    static let wavelengths = [580.0]  // yellow light
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
     static let triangleBaseLength = 140.0
