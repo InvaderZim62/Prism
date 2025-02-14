@@ -29,7 +29,9 @@ class PrismView: UIView {
         lhs.id == rhs.id
     }
 
-    // specify points clockwise starting from right of center
+    //--------------------------------------------------------//
+    // specify points clockwise starting from right of center //
+    //--------------------------------------------------------//
     private lazy var vertices: [CGPoint] = {
         switch type {
         case .triangle:
