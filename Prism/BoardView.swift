@@ -95,7 +95,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     private func drawLight() {
         let startingPoint = lightSourceView.outputPoint
         let startingDirection = lightSourceView.direction
-        guard prismContainingPoint(startingPoint) == nil else { return }  // don't start inside a prism
+        guard isInAirPoint(startingPoint) else { return }  // don't start inside a prism
         
         // propagate separate light wavelengths/colors
         for wavelength in Constant.wavelengths {
@@ -119,13 +119,10 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         for _ in 0..<2 * prismViews.count {  // allow for light to traverse through all prisms twice
             
             // propagate light through air, until contacting next prism (or off screen)
-            guard propagateLightThroughAir(light: light,
-                                           direction: directions[mediumsTraversed],
-                                           point: &point,
-                                           color: color) else { return }
-            
-            guard let prismView = prismContainingPoint(point) else { return }
-            
+            guard let prismView = propagateLightThroughAir(light: light,
+                                                           direction: directions[mediumsTraversed],
+                                                           point: &point,
+                                                           color: color) else { return }
             if prismView.type == .mirror {
                 // reflect light off mirror
                 let reflectedDirection = .pi - directions[mediumsTraversed] + 2 * prismView.rotation
@@ -133,18 +130,13 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 mediumsTraversed += 1
             } else {
                 // bend light at prism interface
-                if let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                                 point: point,
-                                                                 refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                                 prismView: prismView,
-                                                                 isEnteringPrism: true) {
-                    directions.append(lightDirectionInPrism)
-                    mediumsTraversed += 1
-                } else {
-                    // overlapping prisms
-                    finishDrawingLight(light, color: color)
-                    return
-                }
+                let lightDirectionInPrism = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                              point: point,
+                                                              refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                              prismView: prismView,
+                                                              isEnteringPrism: true)
+                directions.append(lightDirectionInPrism)
+                mediumsTraversed += 1
                 
                 // propagate light through prism, until contacting air (or off screen)
                 guard propagateLightThroughPrism(prismView,
@@ -152,36 +144,31 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                                                  direction: directions[mediumsTraversed],
                                                  point: &point,
                                                  color: color) else { return }
-                
                 // bend light at air interface
-                if let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
-                                                               point: point,
-                                                               refractiveIndexOfGlass: refractiveIndexOfGlass,
-                                                               prismView: prismView,
-                                                               isEnteringPrism: false) {
-                    directions.append(lightDirectionInAir)
-                    mediumsTraversed += 1
-                } else {
-                    // overlapping prisms
-                    finishDrawingLight(light, color: color)
-                    return
-                }
+                let lightDirectionInAir = lightDirectionOut(lightDirectionIn: directions[mediumsTraversed],
+                                                            point: point,
+                                                            refractiveIndexOfGlass: refractiveIndexOfGlass,
+                                                            prismView: prismView,
+                                                            isEnteringPrism: false)
+                directions.append(lightDirectionInAir)
+                mediumsTraversed += 1
             }
         }
         finishDrawingLight(light, color: color)
     }
     
-    private func propagateLightThroughAir(light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
+    private func propagateLightThroughAir(light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> PrismView? {
         repeat {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
                              y: Constant.lightPropagationStepSize * sin(direction))
             light.addLine(to: point)
             if isOffScreen(point) {
                 finishDrawingLight(light, color: color)
-                return false
+                return nil
             }
-        } while prismContainingPoint(point) == nil
-        return true
+        } while isInAirPoint(point)
+        
+        return prismContainingPoint(point)
     }
 
     private func propagateLightThroughPrism(_ prismView: PrismView, light: UIBezierPath, direction: Double, point: inout CGPoint, color: UIColor) -> Bool {
@@ -195,7 +182,15 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 return false
             }
         } while isInside(prismView, point: point)
-        return true
+        
+        // after exiting this prism, make sure it's not in another
+        if isInAirPoint(point) {
+            return true
+        } else {
+            // overlapping prisms
+            finishDrawingLight(light, color: color)
+            return false
+        }
     }
     
     private func finishDrawingLight(_ light: UIBezierPath, color: UIColor) {
@@ -214,6 +209,10 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         }
         return nil
     }
+    
+    private func isInAirPoint(_ point: CGPoint) -> Bool {
+        prismContainingPoint(point) == nil
+    }
 
     private func isInside(_ prismView: PrismView, point: CGPoint) -> Bool {
         prismView.path.contains(convert(point, to: prismView))
@@ -231,37 +230,34 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                                    point: CGPoint,
                                    refractiveIndexOfGlass: Double,
                                    prismView: PrismView,
-                                   isEnteringPrism: Bool) -> Double? {
-        if var surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView) {
-            surfaceNormalAngle = (surfaceNormalAngle + (isEnteringPrism ? 0 : .pi)).wrapPi
-//            drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
-            let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
-            let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
-            let sinAngleOfRefraction = refractionRatio * sin(angleOfIncidence)
-            let lightDirectionOut: Double
-            if isEnteringPrism {
+                                   isEnteringPrism: Bool) -> Double {
+        var surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView)
+        surfaceNormalAngle = (surfaceNormalAngle + (isEnteringPrism ? 0 : .pi)).wrapPi
+//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // used for debugging
+        let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
+        let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
+        let sinAngleOfRefraction = refractionRatio * sin(angleOfIncidence)
+        let lightDirectionOut: Double
+        if isEnteringPrism {
+            let angleOfRefraction = asin(sinAngleOfRefraction)
+            lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+        } else {
+            if sinAngleOfRefraction >= -1 && sinAngleOfRefraction <= 1 {
+                // refraction through surface (exiting prism)
                 let angleOfRefraction = asin(sinAngleOfRefraction)
                 lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
+//                print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
             } else {
-                if sinAngleOfRefraction >= -1 && sinAngleOfRefraction <= 1 {
-                    // refraction through surface (exiting prism)
-                    let angleOfRefraction = asin(sinAngleOfRefraction)
-                    lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
-//                    print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
-                } else {
-                    // reflection at surface (staying in prism)
-                    lightDirectionOut = .pi - lightDirectionIn + 2 * surfaceNormalAngle
-                }
+                // reflection at surface (staying in prism)
+                lightDirectionOut = .pi - lightDirectionIn + 2 * surfaceNormalAngle
             }
-            return lightDirectionOut
-        } else {
-            return nil
         }
+        return lightDirectionOut
     }
     
     // direction of surface normal pointing toward inside of prism;
     // +/-.pi radians (0 right, positive clockwise)
-    private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PrismView) -> Double? {
+    private func surfaceNormalAngleAtPoint(_ surfacePoint: CGPoint, on prismView: PrismView) -> Double {
         let angleFromCenterToPoint = atan2(surfacePoint.y - prismView.center.y, surfacePoint.x - prismView.center.x)
         return prismView.directionOfSurfaceNormalAt(angle: angleFromCenterToPoint)
     }
