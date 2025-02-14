@@ -107,8 +107,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     }
     
     private func propagateLightWith(wavelength: Double, startingPoint: CGPoint, startingDirection: Double) {
-        var color = colorForWavelength(wavelength)
-        if wavelength == Constant.fakeWhiteWavelength { color = .white }
+        let color = wavelength == Constant.fakeWhiteWavelength ? .white : colorForWavelength(wavelength)
         let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
         var point = startingPoint
         var lightDirections = [startingDirection]  // keep separate directions for each medium
