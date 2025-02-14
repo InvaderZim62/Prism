@@ -17,19 +17,20 @@ enum PrismType {
 
 class PrismView: UIView {
     
-    let id = UUID()
     var type = PrismType.triangle  // default
     
     var rotation: Double {
         atan2(self.transform.b, self.transform.a)
     }
     
+    private let id = UUID()
+
     static func ==(lhs: PrismView, rhs: PrismView) -> Bool {
         lhs.id == rhs.id
     }
 
     // specify points clockwise starting from right of center
-    lazy var vertices: [CGPoint] = {
+    private lazy var vertices: [CGPoint] = {
         switch type {
         case .triangle:
             return [CGPoint(x: bounds.width - 1, y: bounds.height - 1),
@@ -48,10 +49,10 @@ class PrismView: UIView {
         }
     }()
     
-    lazy var viewCenter = CGPoint(x: bounds.midX, y: bounds.midY)
+    private lazy var viewCenter = CGPoint(x: bounds.midX, y: bounds.midY)
     
     // from 0 -> 2pi
-    lazy var anglesFromCenterToVertices: [Double] = {
+    private lazy var anglesFromCenterToVertices: [Double] = {
         var angles = [Double]()
         for vertex in vertices {
             let angleFromCenter = atan2(vertex.y - viewCenter.y, vertex.x - viewCenter.x)
@@ -61,7 +62,7 @@ class PrismView: UIView {
     }()
     
     // direction of surface normals pointing inside (one for each face)
-    lazy var surfaceNormalDirections: [Double] = {
+    private lazy var surfaceNormalDirections: [Double] = {
         var directions = [Double]()
         let closedVertices = [vertices.last!] + vertices
         for index in 0..<closedVertices.count - 1 {
@@ -71,7 +72,18 @@ class PrismView: UIView {
         return directions
     }()
     
-    // stand-alone path variable used by superview's draw function to determine which light points are inside the prism
+    func directionOfSurfaceNormalAt(angle: Double) -> Double {
+        for (index, vertexAngle) in anglesFromCenterToVertices.enumerated() {
+            let localAngle = (angle - rotation).wrap2Pi
+            if localAngle < vertexAngle {
+                return (surfaceNormalDirections[index] + rotation).wrapPi
+            }
+        }
+        return (surfaceNormalDirections[0] + rotation).wrapPi
+    }
+
+    // stand-alone path variable used by superview's draw function to determine which light points are inside the prism;
+    // make it a property closure, so it only get computed once (shape doesn't change)
     lazy var path: UIBezierPath = {
         let shape = UIBezierPath()
         for index in vertices.indices {
@@ -84,16 +96,6 @@ class PrismView: UIView {
         shape.close()
         return shape
     }()
-    
-    func directionOfSurfaceNormalAt(angle: Double) -> Double {
-        for (index, vertexAngle) in anglesFromCenterToVertices.enumerated() {
-            let localAngle = (angle - rotation).wrap2Pi
-            if localAngle < vertexAngle {
-                return (surfaceNormalDirections[index] + rotation).wrapPi
-            }
-        }
-        return (surfaceNormalDirections[0] + rotation).wrapPi
-    }
     
     override func draw(_ rect: CGRect) {
         switch type {
