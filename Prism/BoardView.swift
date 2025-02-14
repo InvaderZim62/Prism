@@ -14,7 +14,8 @@ import UIKit
 
 struct Constant {
     static let wavelengths = stride(from: 400.0, through: 680.0, by: 7.0)  // 41 wavelengths
-//    static let wavelengths = [580.0]  // yellow light
+//    static let wavelengths = [fakeWhiteWavelength]  // single white light
+    static let fakeWhiteWavelength = 585.0  // near yellow
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
     static let triangleBaseLength = 140.0
     static let rectangleSize = 120.0  // also used for mirror
@@ -102,12 +103,12 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
             propagateLightWith(wavelength: wavelength, startingPoint: startingPoint, startingDirection: startingDirection)
         }
         // add white line next to yellow, on top (otherwise light source looks red)
-        propagateLightWith(wavelength: 585, startingPoint: startingPoint, startingDirection: startingDirection)
+        propagateLightWith(wavelength: Constant.fakeWhiteWavelength, startingPoint: startingPoint, startingDirection: startingDirection)
     }
     
     private func propagateLightWith(wavelength: Double, startingPoint: CGPoint, startingDirection: Double) {
         var color = colorForWavelength(wavelength)
-        if wavelength == 585 { color = .white }  // magic number, close to yellow
+        if wavelength == Constant.fakeWhiteWavelength { color = .white }
         let refractiveIndexOfGlass = refractiveIndexOfGlassWithWavelength(wavelength)
         var point = startingPoint
         var lightDirections = [startingDirection]  // keep separate directions for each medium
