@@ -90,10 +90,10 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     // MARK: - Draw
     
     override func draw(_ rect: CGRect) {
-        drawLight()
+        drawLightPath()
     }
     
-    private func drawLight() {
+    private func drawLightPath() {
         let startingPoint = lightSourceView.outputPoint
         let startingDirection = lightSourceView.direction
         guard isInAirPoint(startingPoint) else { return }  // don't start inside a prism
