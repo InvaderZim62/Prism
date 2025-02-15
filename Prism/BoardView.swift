@@ -12,11 +12,9 @@
 
 import UIKit
 
-protocol Selectable {
+protocol Selectable: UIView {
     var id: UUID { get }
     var isSelected: Bool { get set }
-    var center: CGPoint { get set }
-    var transform: CGAffineTransform { get set }
 }
 
 extension Selectable {
@@ -359,7 +357,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         if var selectableObject = hitTest(location, with: nil) as? Selectable {
             // object tapped - toggle selection
             selectableObject.isSelected.toggle()
-            if var currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
+            if let currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
                 // different object selected - deselect previous
                 currentlySelectedObject.isSelected = false
             }
@@ -373,17 +371,19 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
 
     // pan selected object
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
-        if var currentlySelectedObject {
+        if let currentlySelectedObject {
             let translation = recognizer.translation(in: self)
             currentlySelectedObject.center += translation
             recognizer.setTranslation(.zero, in: self)
             setNeedsDisplay()
+        } else {
+            
         }
     }
 
     // rotate select object
     @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
-        if var currentlySelectedObject {
+        if let currentlySelectedObject {
             let rotation = recognizer.rotation
             currentlySelectedObject.transform = currentlySelectedObject.transform.rotated(by: rotation)
             recognizer.rotation = 0  // reset, to use incremental rotations
