@@ -12,8 +12,11 @@ struct LightConst {
     static let widthPercent = 0.12  // percent bounds.height
 }
 
-class LightSourceView: UIView {
+class LightSourceView: UIView, Selectable {
     
+    let id = UUID()
+    var isSelected = false { didSet { setNeedsDisplay() } }
+
     lazy var width = LightConst.lengthPercent * bounds.width
     lazy var height = LightConst.widthPercent * bounds.height
 
@@ -33,7 +36,7 @@ class LightSourceView: UIView {
                                      cornerRadius: 0.01)
         UIColor.black.setFill()
         rectangle.fill()
-        UIColor.lightGray.setStroke()
+        isSelected ? Constant.selectedObjectColor.setStroke() : UIColor.lightGray.setStroke()
         rectangle.lineWidth = 2
         rectangle.stroke()
     }

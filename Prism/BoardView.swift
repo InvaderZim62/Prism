@@ -12,7 +12,21 @@
 
 import UIKit
 
+protocol Selectable {
+    var id: UUID { get }
+    var isSelected: Bool { get set }
+    var center: CGPoint { get set }
+    var transform: CGAffineTransform { get set }
+}
+
+extension Selectable {
+    func isEqual(to rhs: some Selectable) -> Bool {
+        id == rhs.id
+    }
+}
+
 struct Constant {
+    static let selectedObjectColor = #colorLiteral(red: 0.9994240403, green: 0.9855536819, blue: 0, alpha: 1)
     static let wavelengths = stride(from: 400.0, through: 680.0, by: 7.0)  // 41 wavelengths
 //    static let wavelengths = [fakeWhiteWavelength]  // single white light
     static let fakeWhiteWavelength = 585.0  // near yellow
@@ -29,6 +43,7 @@ struct Constant {
 class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
 
     var prismViews = [PrismView]()  // including mirror
+    var currentlySelectedObject: Selectable?
     let lightSourceView = LightSourceView()
 
     required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
@@ -54,6 +69,15 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                      height: Constant.rectangleSize,
                      rotation: 0)
         addLightSourceView(center: CGPoint(x: 69, y: 124), rotation: -20.rads)  // setup last, so it's on top
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        addGestureRecognizer(tap)
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
+        addGestureRecognizer(pan)
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self  // needed for gestureRecognizer, below
+        addGestureRecognizer(rotation)
     }
     
     private func addPrismView(prismType: PrismType, center: CGPoint, width: Double, height: Double, rotation: Double) {
@@ -63,7 +87,6 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         prismView.bounds.size = CGSize(width: width, height: height)
         prismView.transform = prismView.transform.rotated(by: rotation)
         prismView.backgroundColor = .clear
-        addPanAndRotateGesturesTo(prismView)
         prismViews.append(prismView)
         addSubview(prismView)
     }
@@ -73,18 +96,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         lightSourceView.center = center
         lightSourceView.transform = lightSourceView.transform.rotated(by: rotation)
         lightSourceView.backgroundColor = .clear
-        addPanAndRotateGesturesTo(lightSourceView)
         addSubview(lightSourceView)
-    }
-    
-    private func addPanAndRotateGesturesTo(_ view: UIView) {
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        view.addGestureRecognizer(pan)
-        
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self  // needed for gestureRecognizer, below
-        view.addGestureRecognizer(rotation)
     }
 
     // MARK: - Draw
@@ -341,21 +353,39 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
 
     // MARK: - Gestures handlers
     
+    // toggle selected object
+    @objc func handleTap(recognizer: UITapGestureRecognizer) {
+        let location = recognizer.location(in: self)
+        if var selectableObject = hitTest(location, with: nil) as? Selectable {
+            // object tapped - toggle selection
+            selectableObject.isSelected.toggle()
+            if var currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
+                // different object selected - deselect previous
+                currentlySelectedObject.isSelected = false
+            }
+            currentlySelectedObject = selectableObject.isSelected ? selectableObject : nil
+        } else {
+            // open space tapped - deselect any object
+            currentlySelectedObject?.isSelected = false
+            currentlySelectedObject = nil
+        }
+    }
+
+    // pan selected object
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
-        if let pannedView = recognizer.view {
+        if var currentlySelectedObject {
             let translation = recognizer.translation(in: self)
-            pannedView.center += translation
+            currentlySelectedObject.center += translation
             recognizer.setTranslation(.zero, in: self)
             setNeedsDisplay()
         }
     }
-    
-    // to allow simultaneous rotate and pan gestures,
-    // see Colors app, which uses simultaneous pinch and pan gestures
+
+    // rotate select object
     @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
-        if let rotatedView = recognizer.view {
+        if var currentlySelectedObject {
             let rotation = recognizer.rotation
-            rotatedView.transform = rotatedView.transform.rotated(by: rotation)
+            currentlySelectedObject.transform = currentlySelectedObject.transform.rotated(by: rotation)
             recognizer.rotation = 0  // reset, to use incremental rotations
             setNeedsDisplay()
         }

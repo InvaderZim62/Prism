@@ -15,18 +15,14 @@ enum PrismType {
     case triangle, rectangle, mirror
 }
 
-class PrismView: UIView {
+class PrismView: UIView, Selectable {
     
+    let id = UUID()
     var type = PrismType.triangle  // default
+    var isSelected = false { didSet { setNeedsDisplay() } }
     
     var rotation: Double {
         atan2(self.transform.b, self.transform.a)
-    }
-    
-    private let id = UUID()
-
-    static func ==(lhs: PrismView, rhs: PrismView) -> Bool {
-        lhs.id == rhs.id
     }
 
     //--------------------------------------------------------//
@@ -103,13 +99,13 @@ class PrismView: UIView {
         switch type {
         case .mirror:
             path.lineWidth = 2
-            UIColor.lightGray.setStroke()
+            isSelected ? Constant.selectedObjectColor.setStroke() : UIColor.lightGray.setStroke()
             path.stroke()
             UIColor.black.setFill()
             path.fill()
         default:
             path.lineWidth = 1
-            UIColor.cyan.setStroke()
+            isSelected ? Constant.selectedObjectColor.setStroke() : UIColor.cyan.setStroke()
             path.stroke()
         }
     }

@@ -1,8 +1,8 @@
 //
 //  Extensions.swift
-//  War
+//  Prism
 //
-//  Created by Phil Stern on 7/26/22.
+//  Created by Phil Stern on 2/1/25.
 //
 
 import UIKit
@@ -100,6 +100,10 @@ extension CGPoint {
         lhs = lhs + rhs
     }
 
+    static func *(lhs: CGFloat, rhs: CGPoint) -> CGPoint {
+        return CGPoint(x: lhs + rhs.x, y: lhs + rhs.y)
+    }
+    
     func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
         return CGPoint(x: x + dx, y: y + dy)
     }
