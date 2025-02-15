@@ -50,26 +50,26 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
         super.init(coder: coder)
         addPrismView(prismType: .triangle,
-                     center: CGPoint(x: 193, y: 102),
+                     center: CGPoint(x: 333, y: 102),
                      width: Constant.triangleBaseLength,
                      height: Constant.triangleBaseLength * sin(60.rads),
                      rotation: 0)
         addPrismView(prismType: .triangle,
-                     center: CGPoint(x: 221, y: 297),
+                     center: CGPoint(x: 361, y: 297),
                      width: Constant.triangleBaseLength,
                      height: Constant.triangleBaseLength * sin(60.rads),
                      rotation: 180.rads)
         addPrismView(prismType: .rectangle,
-                     center: CGPoint(x: 393, y: 261),
+                     center: CGPoint(x: 533, y: 261),
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
                      rotation: 0)
         addPrismView(prismType: .mirror,
-                     center: CGPoint(x: 562, y: 209),
+                     center: CGPoint(x: 702, y: 209),
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
                      rotation: 0)
-        addLightSourceView(center: CGPoint(x: 69, y: 124), rotation: -20.rads)  // setup last, so it's on top
+        addLightSourceView(center: CGPoint(x: 209, y: 124), rotation: -20.rads)  // setup last, so it's on top
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         addGestureRecognizer(tap)
@@ -252,7 +252,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                                    isEnteringPrism: Bool) -> Double {
         var surfaceNormalAngle = surfaceNormalAngleAtPoint(point, on: prismView)
         surfaceNormalAngle = (surfaceNormalAngle + (isEnteringPrism ? 0 : .pi)).wrapPi
-//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // debug (should use one wavelength)
+//        drawVectorAt(point, inDirection: surfaceNormalAngle, color: .cyan)  // for debugging (use with one wavelength)
         let angleOfIncidence = (surfaceNormalAngle - lightDirectionIn).wrapPi
         let refractionRatio = isEnteringPrism ? Constant.refractiveIndexOfAir / refractiveIndexOfGlass : refractiveIndexOfGlass / Constant.refractiveIndexOfAir
         let sinAngleOfRefraction = refractionRatio * sin(angleOfIncidence)
@@ -265,7 +265,6 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
                 // refraction through surface (exiting prism)
                 let angleOfRefraction = asin(sinAngleOfRefraction)
                 lightDirectionOut = (surfaceNormalAngle - angleOfRefraction).wrapPi
-//                print(String(format: "%@, light dir: %.1f, surface norm: %.1f, incidence: %.1f, refract: %.1f, light dir: %.1f", isEnteringPrism ? "Entering" : "Exiting", lightDirectionIn.degs, surfaceNormalAngle.degs, angleOfIncidence.degs, angleOfRefraction.degs, lightDirectionOut.degs))
             } else {
                 // reflection at surface (staying in prism)
                 lightDirectionOut = .pi - lightDirectionIn + 2 * surfaceNormalAngle
