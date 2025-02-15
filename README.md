@@ -1,4 +1,4 @@
-#Prism
+# Prism
 
 Simulation of the defraction of light through a prism, based on Snell's law.
 
