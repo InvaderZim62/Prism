@@ -9,6 +9,8 @@
 //  - set gesture delegates to self
 //  - add func gestureRecognizer(shouldRecognizeSimultaneouslyWith:)
 //
+//  To do...
+//
 
 import UIKit
 
@@ -41,6 +43,7 @@ struct Constant {
 class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
 
     var prismViews = [PrismView]()  // including mirror
+    var safeView = UIView()
     var currentlySelectedObject: Selectable?
     let lightSourceView = LightSourceView()
 
@@ -354,7 +357,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     // toggle selected object
     @objc func handleTap(recognizer: UITapGestureRecognizer) {
         let location = recognizer.location(in: self)
-        if var selectableObject = hitTest(location, with: nil) as? Selectable {
+        if let selectableObject = hitTest(location, with: nil) as? Selectable {
             // object tapped - toggle selection
             selectableObject.isSelected.toggle()
             if let currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
@@ -373,7 +376,7 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
     @objc func handlePan(recognizer: UIPanGestureRecognizer) {
         if let currentlySelectedObject {
             let translation = recognizer.translation(in: self)
-            currentlySelectedObject.center += translation
+            currentlySelectedObject.center = (currentlySelectedObject.center + translation).limitedToView(safeView)
             recognizer.setTranslation(.zero, in: self)
             setNeedsDisplay()
         } else {

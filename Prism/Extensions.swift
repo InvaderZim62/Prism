@@ -107,4 +107,16 @@ extension CGPoint {
     func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
         return CGPoint(x: x + dx, y: y + dy)
     }
+    
+    func limitedToView(_ view: UIView) -> CGPoint {
+        let limitedX = min(view.frame.maxX, max(view.frame.minX, x))  // use bounds, if prismViews are subviews of the view passed in (safeView)
+        let limitedY = min(view.frame.maxY, max(view.frame.minY, y))  // otherwise use frame
+        return CGPoint(x: limitedX, y: limitedY)
+    }
+    
+    func limitedToView(_ view: UIView, withHorizontalInset horizontalInset: CGFloat, andVerticalInset verticalInset: CGFloat) -> CGPoint {
+        let limitedX = min(view.bounds.maxX - horizontalInset, max(view.bounds.minX + horizontalInset, x))
+        let limitedY = min(view.bounds.maxY - verticalInset, max(view.bounds.minY + verticalInset, y))
+        return CGPoint(x: limitedX, y: limitedY)
+    }
 }
