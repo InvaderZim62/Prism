@@ -12,7 +12,7 @@ The app traces 41 different wavelengths of light from a light source through "ai
 
 If the light exiting a prism bends enough that it becomes parallel to the surface, it starts to reflect back into the prism, as shown in this video: [Light beam and rotating prism, animation](https://www.sciencephoto.com/media/727340/view/light-beam-and-rotating-prism-animation).
 
-## Equations
+## References
 
 This is the index of refraction of light at different wavelengths through glass, from this reference: [Optical Properties of Glass](https://www.koppglass.com/blog/optical-properties-glass-how-light-and-glass-interact).
 
