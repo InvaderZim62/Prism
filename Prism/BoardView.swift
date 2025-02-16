@@ -27,7 +27,7 @@ extension Selectable {
 
 struct Constant {
     static let selectedObjectColor = #colorLiteral(red: 0.9994240403, green: 0.9855536819, blue: 0, alpha: 1)
-    static let wavelengths = stride(from: 400.0, through: 680.0, by: 7.0)  // 41 wavelengths
+    static let wavelengths = stride(from: 400.0, through: 666.0, by: 7.0)  // 39 wavelengths (in nanometers)
 //    static let wavelengths = [fakeWhiteWavelength]  // single white light
     static let fakeWhiteWavelength = 585.0  // near yellow
     static let lightSourceSideLength = 140.0  // view size (bigger than drawing, to help rotating)
