@@ -8,7 +8,7 @@ Tap an object to select, then pan or rotate it.
 
 ## Methodology
 
-The app traces 41 different wavelengths of light from a light source through "air", until it encounters a prism or mirror (or goes off screen).  Each wavelength of light bends a different amount at the prism walls, depending on it's index of refraction.  I cheat a little and draw one last white line on top, so it looks like white light comming from the light source.
+The app traces 39 different wavelengths of light from a light source through "air", until it encounters a prism or mirror (or goes off screen).  Each wavelength of light bends a different amount at the prism walls, depending on it's index of refraction.  I cheat a little and draw one last white line on top, so it looks like white light comming from the light source.
 
 If the light exiting a prism bends enough that it becomes parallel to the surface, it starts to reflect back into the prism, as shown in this video: [Light beam and rotating prism, animation](https://www.sciencephoto.com/media/727340/view/light-beam-and-rotating-prism-animation).
 
@@ -21,3 +21,5 @@ This is the index of refraction of light at different wavelengths through glass,
 Using [Snell's Law](https://en.wikipedia.org/wiki/Snell%27s_law) and the angle of incidence of the light, you can compute how much each wavelenght of light bends going through the glass.
 
 To convert from wavelength to color, I used the code found here: [StackOverflow](https://stackoverflow.com/a/14917481/2526464).
+
+![colors](https://github.com/user-attachments/assets/1931236c-2fd6-4576-9f13-2cd0fa105023)
