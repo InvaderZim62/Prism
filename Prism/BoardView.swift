@@ -4,26 +4,8 @@
 //
 //  Created by Phil Stern on 2/1/25.
 //
-//  To allow simultaneous pan and rotate gestures:
-//  - add UIGestureRecognizerDelegate to class definition
-//  - set gesture delegates to self
-//  - add func gestureRecognizer(shouldRecognizeSimultaneouslyWith:)
-//
-//  To do...
-//
 
 import UIKit
-
-protocol Selectable: UIView {
-    var id: UUID { get }
-    var isSelected: Bool { get set }
-}
-
-extension Selectable {
-    func isEqual(to rhs: some Selectable) -> Bool {
-        id == rhs.id
-    }
-}
 
 struct Constant {
     static let selectedObjectColor = #colorLiteral(red: 0.9994240403, green: 0.9855536819, blue: 0, alpha: 1)
@@ -40,65 +22,10 @@ struct Constant {
     static let mirrorWidthPercent = 0.1
 }
 
-class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
+class BoardView: UIView {
 
     var prismViews = [PrismView]()  // including mirror
-    var safeView = UIView()
-    var currentlySelectedObject: Selectable?
     let lightSourceView = LightSourceView()
-
-    required init?(coder: NSCoder) {  // init(coder:) called for views added through Interface Builder
-        super.init(coder: coder)
-        addPrismView(prismType: .triangle,
-                     center: CGPoint(x: 333, y: 102),
-                     width: Constant.triangleBaseLength,
-                     height: Constant.triangleBaseLength * sin(60.rads),
-                     rotation: 0)
-        addPrismView(prismType: .triangle,
-                     center: CGPoint(x: 361, y: 297),
-                     width: Constant.triangleBaseLength,
-                     height: Constant.triangleBaseLength * sin(60.rads),
-                     rotation: 180.rads)
-        addPrismView(prismType: .rectangle,
-                     center: CGPoint(x: 533, y: 261),
-                     width: Constant.rectangleSize,
-                     height: Constant.rectangleSize,
-                     rotation: 0)
-        addPrismView(prismType: .mirror,
-                     center: CGPoint(x: 702, y: 209),
-                     width: Constant.rectangleSize,
-                     height: Constant.rectangleSize,
-                     rotation: 0)
-        addLightSourceView(center: CGPoint(x: 209, y: 124), rotation: -20.rads)  // setup last, so it's on top
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        addGestureRecognizer(tap)
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        addGestureRecognizer(pan)
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self  // needed for gestureRecognizer, below
-        addGestureRecognizer(rotation)
-    }
-    
-    private func addPrismView(prismType: PrismType, center: CGPoint, width: Double, height: Double, rotation: Double) {
-        let prismView = PrismView()
-        prismView.type = prismType
-        prismView.center = center
-        prismView.bounds.size = CGSize(width: width, height: height)
-        prismView.transform = prismView.transform.rotated(by: rotation)
-        prismView.backgroundColor = .clear
-        prismViews.append(prismView)
-        addSubview(prismView)
-    }
-
-    private func addLightSourceView(center: CGPoint, rotation: Double) {
-        lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
-        lightSourceView.center = center
-        lightSourceView.transform = lightSourceView.transform.rotated(by: rotation)
-        lightSourceView.backgroundColor = .clear
-        addSubview(lightSourceView)
-    }
 
     // MARK: - Draw
     
@@ -349,58 +276,5 @@ class BoardView: UIView, UIGestureRecognizerDelegate {  // UIGestureRecognizerDe
         blue = pow(blue * factor, gamma)
         
         return UIColor(red: red, green: green, blue: blue, alpha: 1)
-    }
-
-    // MARK: - Gestures handlers
-    
-    // toggle selected object
-    @objc func handleTap(recognizer: UITapGestureRecognizer) {
-        let location = recognizer.location(in: self)
-        if let selectableObject = hitTest(location, with: nil) as? Selectable {
-            // object tapped - toggle selection
-            selectableObject.isSelected.toggle()
-            if let currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
-                // different object selected - deselect previous
-                currentlySelectedObject.isSelected = false
-            }
-            currentlySelectedObject = selectableObject.isSelected ? selectableObject : nil
-        } else {
-            // open space tapped - deselect any object
-            currentlySelectedObject?.isSelected = false
-            currentlySelectedObject = nil
-        }
-    }
-
-    // pan selected object
-    @objc func handlePan(recognizer: UIPanGestureRecognizer) {
-        if let currentlySelectedObject {
-            let translation = recognizer.translation(in: self)
-            currentlySelectedObject.center = (currentlySelectedObject.center + translation).limitedToView(safeView)
-            recognizer.setTranslation(.zero, in: self)
-            setNeedsDisplay()
-        } else {
-            
-        }
-    }
-
-    // rotate select object
-    @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
-        if let currentlySelectedObject {
-            let rotation = recognizer.rotation
-            currentlySelectedObject.transform = currentlySelectedObject.transform.rotated(by: rotation)
-            recognizer.rotation = 0  // reset, to use incremental rotations
-            setNeedsDisplay()
-        }
-    }
-    
-    // MARK: - UIGestureRecognizerDelegate
-    
-    // allow simultaneous pan and rotate gestures
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if gestureRecognizer is UIPanGestureRecognizer || gestureRecognizer is UIRotationGestureRecognizer {
-            return true
-        } else {
-            return false
-        }
     }
 }
