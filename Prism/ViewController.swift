@@ -5,9 +5,9 @@
 //  Created by Phil Stern on 2/1/25.
 //
 //  To allow simultaneous pan and rotate gestures:
-//  - add UIGestureRecognizerDelegate to class definition
-//  - set gesture delegates to self
+//  - add UIGestureRecognizerDelegate to class definition (see extension)
 //  - add func gestureRecognizer(shouldRecognizeSimultaneouslyWith:)
+//  - set gesture delegates to self
 //
 
 import UIKit
@@ -23,16 +23,27 @@ extension Selectable {
     }
 }
 
-class ViewController: UIViewController, UIGestureRecognizerDelegate {  // UIGestureRecognizerDelegate for simultaneous gestures
+class ViewController: UIViewController {
         
     var currentlySelectedObject: Selectable?
 
     @IBOutlet weak var boardView: BoardView!
     @IBOutlet weak var safeView: UIView!  // use to limit panning of prisms
     
+    // MARK: -
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        addPrismViews()
+        addLightSourceAndPrismViews()
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        view.addGestureRecognizer(tap)
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        pan.delegate = self  // needed for gestureRecognizer, below
+        view.addGestureRecognizer(pan)
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
+        rotation.delegate = self  // needed for gestureRecognizer, below
+        view.addGestureRecognizer(rotation)
     }
     
     override func viewDidLayoutSubviews() {
@@ -40,7 +51,9 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {  // UIGest
         boardView.setNeedsDisplay()
     }
     
-    private func addPrismViews() {
+    private func addLightSourceAndPrismViews() {
+        addLightSourceView(center: CGPoint(x: 109, y: 124), rotation: -20.rads)  // setup last, so it's on top
+        
         addPrismView(prismType: .triangle,
                      center: CGPoint(x: 233, y: 102),
                      width: Constant.triangleBaseLength,
@@ -61,18 +74,16 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {  // UIGest
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
                      rotation: 0)
-        addLightSourceView(center: CGPoint(x: 109, y: 124), rotation: -20.rads)  // setup last, so it's on top
-        
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        view.addGestureRecognizer(tap)
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
-        view.addGestureRecognizer(pan)
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self  // needed for gestureRecognizer, below
-        view.addGestureRecognizer(rotation)
     }
-    
+
+    private func addLightSourceView(center: CGPoint, rotation: Double) {
+        boardView.lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
+        boardView.lightSourceView.center = center
+        boardView.lightSourceView.transform = boardView.lightSourceView.transform.rotated(by: rotation)
+        boardView.lightSourceView.backgroundColor = .clear
+        boardView.addSubview(boardView.lightSourceView)
+    }
+
     private func addPrismView(prismType: PrismType, center: CGPoint, width: Double, height: Double, rotation: Double) {
         let prismView = PrismView()
         prismView.type = prismType
@@ -82,14 +93,6 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {  // UIGest
         prismView.backgroundColor = .clear
         boardView.prismViews.append(prismView)
         boardView.addSubview(prismView)
-    }
-
-    private func addLightSourceView(center: CGPoint, rotation: Double) {
-        boardView.lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
-        boardView.lightSourceView.center = center
-        boardView.lightSourceView.transform = boardView.lightSourceView.transform.rotated(by: rotation)
-        boardView.lightSourceView.backgroundColor = .clear
-        boardView.addSubview(boardView.lightSourceView)
     }
 
     // MARK: - Gestures handlers
@@ -133,9 +136,9 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {  // UIGest
             boardView.setNeedsDisplay()
         }
     }
-    
-    // MARK: - UIGestureRecognizerDelegate
-    
+}
+
+extension ViewController: UIGestureRecognizerDelegate {
     // allow simultaneous pan and rotate gestures
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         if gestureRecognizer is UIPanGestureRecognizer || gestureRecognizer is UIRotationGestureRecognizer {

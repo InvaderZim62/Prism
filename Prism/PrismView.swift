@@ -4,9 +4,9 @@
 //
 //  Created by Phil Stern on 2/13/25.
 //
-//  Precompute the angles to the vertices and surface normal directions. Return surface normal
-//  direction for a position around the prism, based on which which vertices a line to the
-//  position falls between.
+//  Precompute the angles to the prism vertices and the surface normal directions. Determine
+//  surface normal direction for a position around the prism, based on which which vertices
+//  a line to the position falls between.
 //
 
 import UIKit
