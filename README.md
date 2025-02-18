@@ -6,7 +6,12 @@ Tap an object to select, then pan or rotate it.
 
 ![Prism](https://github.com/user-attachments/assets/29161d29-6257-472f-acd4-db1a04280ca9)
 
-https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383
+<video width="450" height="224" muted autoplay loop playsinline>
+  <source src="https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383" type="video/mov />
+  Your browser does not support this video file.
+</video>
+
+<video width="450" muted autoplay loop src="https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383">
 
 ## Methodology
 
