@@ -39,10 +39,10 @@ class ViewController: UIViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         view.addGestureRecognizer(tap)
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        pan.delegate = self  // needed for gestureRecognizer, below
+        pan.delegate = self  // needed for gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:)
         view.addGestureRecognizer(pan)
         let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self  // needed for gestureRecognizer, below
+        rotation.delegate = self
         view.addGestureRecognizer(rotation)
     }
     
