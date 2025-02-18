@@ -6,7 +6,7 @@ Tap an object to select, then pan or rotate it.
 
 ![Prism](https://github.com/user-attachments/assets/29161d29-6257-472f-acd4-db1a04280ca9)
 
-https://github.com/user-attachments/assets/4fc1d941-ddcb-47d6-bd31-7c0fc5486e0c
+https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383
 
 ## Methodology
 
