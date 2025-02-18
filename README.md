@@ -6,13 +6,6 @@ Tap an object to select, then pan or rotate it.
 
 ![Prism](https://github.com/user-attachments/assets/29161d29-6257-472f-acd4-db1a04280ca9)
 
-<video width="450" height="224" muted autoplay loop playsinline>
-  <source src="https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383" type="video/mov />
-  Your browser does not support this video file.
-</video>
-
-<video width="450" muted autoplay loop src="https://github.com/user-attachments/assets/bb9e9aff-d7ec-4281-b90b-9f29978b3383">
-
 ## Methodology
 
 The app traces 39 different wavelengths of light from a light source through "air", until it encounters a prism or mirror (or goes off screen).  Each wavelength of light bends a different amount at the prism walls, depending on it's index of refraction.  I cheat a little and draw one last white line on top, so it looks like white light comming from the light source.
