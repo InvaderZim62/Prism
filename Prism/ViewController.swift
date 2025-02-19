@@ -38,11 +38,11 @@ class ViewController: UIViewController {
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         view.addGestureRecognizer(tap)
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleIndirectPan))
         pan.delegate = self  // needed for gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:)
         view.addGestureRecognizer(pan)
-        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        rotation.delegate = self
+        let rotation = UIRotationGestureRecognizer(target: self, action: #selector(handleIndirectRotation))
+        rotation.delegate = self  // needed for gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:)
         view.addGestureRecognizer(rotation)
     }
     
@@ -52,8 +52,7 @@ class ViewController: UIViewController {
     }
     
     private func addLightSourceAndPrismViews() {
-        addLightSourceView(center: CGPoint(x: 109, y: 124), rotation: -20.rads)  // setup last, so it's on top
-        
+        // boardView coordinates
         addPrismView(prismType: .triangle,
                      center: CGPoint(x: 233, y: 102),
                      width: Constant.triangleBaseLength,
@@ -74,14 +73,7 @@ class ViewController: UIViewController {
                      width: Constant.rectangleSize,
                      height: Constant.rectangleSize,
                      rotation: 0)
-    }
-
-    private func addLightSourceView(center: CGPoint, rotation: Double) {
-        boardView.lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
-        boardView.lightSourceView.center = center
-        boardView.lightSourceView.transform = boardView.lightSourceView.transform.rotated(by: rotation)
-        boardView.lightSourceView.backgroundColor = .clear
-        boardView.addSubview(boardView.lightSourceView)
+        addLightSourceView(center: CGPoint(x: 109, y: 124), rotation: -20.rads)  // add last, so it's on top
     }
 
     private func addPrismView(prismType: PrismType, center: CGPoint, width: Double, height: Double, rotation: Double) {
@@ -93,6 +85,20 @@ class ViewController: UIViewController {
         prismView.backgroundColor = .clear
         boardView.prismViews.append(prismView)
         boardView.addSubview(prismView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleDirectPan))
+        prismView.addGestureRecognizer(pan)
+    }
+
+    private func addLightSourceView(center: CGPoint, rotation: Double) {
+        boardView.lightSourceView.bounds.size = CGSize(width: Constant.lightSourceSideLength, height: Constant.lightSourceSideLength)
+        boardView.lightSourceView.center = center
+        boardView.lightSourceView.transform = boardView.lightSourceView.transform.rotated(by: rotation)
+        boardView.lightSourceView.backgroundColor = .clear
+        boardView.addSubview(boardView.lightSourceView)
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleDirectPan))
+        boardView.lightSourceView.addGestureRecognizer(pan)
     }
 
     // MARK: - Gestures handlers
@@ -100,7 +106,7 @@ class ViewController: UIViewController {
     // toggle selected object
     @objc func handleTap(recognizer: UITapGestureRecognizer) {
         let location = recognizer.location(in: view)
-        if let selectableObject = boardView.hitTest(location, with: nil) as? Selectable {  // nil since not called from touchesBegan(touches:event:)
+        if let selectableObject = view.hitTest(location, with: nil) as? Selectable {  // nil since not called from touchesBegan(touches:event:)
             // object tapped - toggle selection
             selectableObject.isSelected.toggle()
             if let currentlySelectedObject, !currentlySelectedObject.isEqual(to: selectableObject) {
@@ -115,20 +121,29 @@ class ViewController: UIViewController {
         }
     }
     
-    // pan selected object
-    @objc func handlePan(recognizer: UIPanGestureRecognizer) {
-        if let currentlySelectedObject {
+    // pan object with finger directly on it
+    @objc func handleDirectPan(recognizer: UIPanGestureRecognizer) {
+        guard currentlySelectedObject == nil else { return }
+        if let selectableView = recognizer.view as? Selectable {
             let translation = recognizer.translation(in: view)
-            currentlySelectedObject.center = (currentlySelectedObject.center + translation).limitedToView(safeView)
+            selectableView.center = (selectableView.center + translation).limitedToView(safeView)  // assumes boardView origin = 0, 0
             recognizer.setTranslation(.zero, in: view)
             boardView.setNeedsDisplay()
-        } else {
-            
         }
     }
     
-    // rotate select object
-    @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
+    // pan selected object (panning anywhere in view)
+    @objc func handleIndirectPan(recognizer: UIPanGestureRecognizer) {
+        if let currentlySelectedObject {
+            let translation = recognizer.translation(in: view)
+            currentlySelectedObject.center = (currentlySelectedObject.center + translation).limitedToView(safeView)  // assumes boardView origin = 0, 0
+            recognizer.setTranslation(.zero, in: view)
+            boardView.setNeedsDisplay()
+        }
+    }
+
+    // rotate select object (rotating anywhere in view)
+    @objc func handleIndirectRotation(recognizer: UIRotationGestureRecognizer) {
         if let currentlySelectedObject {
             let rotation = recognizer.rotation
             currentlySelectedObject.transform = currentlySelectedObject.transform.rotated(by: rotation)

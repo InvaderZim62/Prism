@@ -109,8 +109,8 @@ extension CGPoint {
     }
     
     func limitedToView(_ view: UIView) -> CGPoint {
-        let limitedX = min(view.frame.maxX, max(view.frame.minX, x))  // use bounds, if prismViews are subviews of the view passed in (safeView)
-        let limitedY = min(view.frame.maxY, max(view.frame.minY, y))  // otherwise use frame
+        let limitedX = min(view.bounds.maxX, max(view.bounds.minX, x))  // may need to use frame, depending on what view is passed in
+        let limitedY = min(view.bounds.maxY, max(view.bounds.minY, y))
         return CGPoint(x: limitedX, y: limitedY)
     }
     

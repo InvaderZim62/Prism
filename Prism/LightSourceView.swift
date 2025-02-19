@@ -21,6 +21,7 @@ class LightSourceView: UIView, Selectable {
     lazy var height = LightConst.widthPercent * bounds.height
 
     var outputPoint: CGPoint {
+        // superview (boardView) coordinates
         center + CGPoint(x: (width / 2) * cos(direction), y: (width / 2) * sin(direction))
     }
     

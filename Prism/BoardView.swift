@@ -33,7 +33,7 @@ class BoardView: UIView {
         drawLightPath()
     }
     
-    private func drawLightPath() {
+    private func drawLightPath() {  // boardView's coordinates
         let startingPoint = lightSourceView.outputPoint
         let startingDirection = lightSourceView.direction
         guard isInAirPoint(startingPoint) else { return }  // don't start inside a prism
@@ -57,7 +57,7 @@ class BoardView: UIView {
         
         for _ in 0..<2 * prismViews.count {  // allow for light to traverse through all prisms twice
             
-            // propagate light through air, until contacting next prism (or off screen)
+            // propagate light through air, until contacting next prism (or off board)
             guard let prismView = propagateLightThroughAir(lightPath: lightPath,
                                                            direction: lightDirections[mediumsTraversed],
                                                            point: &point,
@@ -77,7 +77,7 @@ class BoardView: UIView {
                 lightDirections.append(lightDirectionInPrism)
                 mediumsTraversed += 1
                 
-                // propagate light through prism, until contacting air (or off screen)
+                // propagate light through prism, until contacting air (or off board)
                 guard propagateLightThroughPrism(prismView,
                                                  lightPath: lightPath,
                                                  direction: lightDirections[mediumsTraversed],
@@ -104,7 +104,7 @@ class BoardView: UIView {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(direction),
                              y: Constant.lightPropagationStepSize * sin(direction))
             lightPath.addLine(to: point)
-            if isOffScreen(point) {
+            if isOffBoard(point) {
                 finishDrawingLightPath(lightPath, color: color)
                 return nil
             }
@@ -123,7 +123,7 @@ class BoardView: UIView {
             point += CGPoint(x: Constant.lightPropagationStepSize * cos(lightDirection),
                              y: Constant.lightPropagationStepSize * sin(lightDirection))
             lightPath.addLine(to: point)
-            if isOffScreen(point) {
+            if isOffBoard(point) {
                 finishDrawingLightPath(lightPath, color: color)
                 return false
             }
@@ -164,8 +164,8 @@ class BoardView: UIView {
         prismView.path.contains(convert(point, to: prismView))
     }
 
-    private func isOffScreen(_ point: CGPoint) -> Bool {
-        !frame.contains(point)
+    private func isOffBoard(_ point: CGPoint) -> Bool {
+        !bounds.contains(point)
     }
     
     // light direction after crossing surface boundary, based on Snell's law;
